@@ -47,7 +47,7 @@ async def report(ctx, match_id: discord.Option(str)):
 async def cardstats(ctx, card_id: str):
     stats = await db.card_stats(card_id)
     if card_id in stats:
-        response = f"Winrate for card {card_id} by play count:\n"
+        response = f"Winrate for {card_id} by play count:\n"
         for played, data in stats[card_id].items():
             response += (f"Played {played} time {data['played']} matches, "
                          f"Winrate: {data['winrate']:.2f}%\n")
