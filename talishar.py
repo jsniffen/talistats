@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import List
 import requests
+import uuid
 
 @dataclass
 class Card:
@@ -22,6 +24,7 @@ class Match:
     id: str
     turns: int
     first_player: int
+    date: datetime
 
     p1_hero: str
     p1_score: int
@@ -35,9 +38,13 @@ class Match:
 
     @classmethod
     def from_match_stats(cls, p1, p2):
-        id = p1["gameId"]
+        # NOTE(Julian): The talishar gameName is not unique for rematches,
+        # so we have to generate our own ID to ensure it's globally unique.
+        id = str(uuid.uuid4())
+
         turns = p1["turns"]
         first_player = 1 if p1["firstPlayer"] == 1 else 2
+        date = datetime.now()
 
         p1_hero = p1["character"][0]["cardName"]
         p1_score = p1["result"]
@@ -77,7 +84,7 @@ class Match:
                 played=0 if "played" not in card else card["played"],
             ))
 
-        return cls(id=id, first_player=first_player, turns=turns,
+        return cls(id=id, first_player=first_player, turns=turns, date=date,
                         p1_hero=p1_hero, p1_score=p1_score, p1_avg_value=p1_avg_value, p1_cards=p1_cards,
                         p2_hero=p2_hero, p2_score=p2_score, p2_avg_value=p2_avg_value, p2_cards=p2_cards)
 
@@ -89,12 +96,12 @@ class Match:
         p2 = f"{self.p2_hero} ({self.p2_avg_value})"
         
         if not self.is_over():
-            return f"#{self.id} {p1} vs. {p2} is still in progress"
+            return f"{p1} vs. {p2} is still in progress"
 
         winner = p1 if self.p1_score else p2
         loser = p1 if self.p2_score else p2
 
-        return f"#{self.id} {winner} beat {loser} in {self.turns} turns"
+        return f"{winner} beat {loser} in {self.turns} turns"
 
 
 def get_match_stats(match_id):

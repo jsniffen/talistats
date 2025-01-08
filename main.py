@@ -1,7 +1,6 @@
 # TODO:
-#   - add date to match
-#   - prepend datestring to ID to ensure unique
 #   - add better logging
+#   - add a way to filter format?
 
 
 from dotenv import load_dotenv

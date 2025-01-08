@@ -18,7 +18,7 @@ def create_tables():
             (id text,
                 player_1_name text, player_1_score integer, player_1_avg_value real,
                 player_2_name text, player_2_score integer, player_2_avg_value real,
-                first_player integer, turns integer
+                first_player integer, turns integer, date timestamp
             )
         """)
 
@@ -33,11 +33,11 @@ async def insert_card(cursor, card):
 async def insert_match(match):
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.cursor()
-        await cursor.execute("insert into matches values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        await cursor.execute("insert into matches values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (match.id,
                     match.p1_hero, match.p1_score, match.p1_avg_value,
                     match.p2_hero, match.p2_score, match.p2_avg_value,
-                    match.first_player, match.turns))
+                    match.first_player, match.turns, match.date))
 
         for card in match.p1_cards + match.p2_cards:
             await cursor.execute("insert into cards values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -48,7 +48,20 @@ async def insert_match(match):
 
 async def match_exists(match):
     async with aiosqlite.connect(DB_NAME) as db:
-        async with db.execute("select * from matches where id == ?", (match.id,)) as cursor:
+        async with db.execute("""
+                select * from matches
+                where player_1_name == ?
+                and player_1_score == ?
+                and player_1_avg_value == ?
+                and player_2_name == ?
+                and player_2_score == ?
+                and player_2_avg_value == ?
+                and first_player == ?
+                and turns == ?
+                and date >= Datetime(?, '-1 hour')
+            """, (match.p1_hero, match.p1_score, match.p1_avg_value,
+                match.p2_hero, match.p2_score, match.p2_avg_value,
+                match.first_player, match.turns, match.date)) as cursor:
             async for row in cursor:
                 return True
         return False
