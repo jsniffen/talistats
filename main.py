@@ -1,3 +1,9 @@
+# TODO:
+#   - add date to match
+#   - prepend datestring to ID to ensure unique
+#   - add better logging
+
+
 from dotenv import load_dotenv
 import db
 import discord
@@ -46,4 +52,5 @@ if __name__ == "__main__":
     #     pass
 
     db.create_tables()
+    print("Starting bot...")
     bot.run(os.getenv("BOT_TOKEN"))
