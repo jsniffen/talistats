@@ -1,0 +1,4 @@
+aiosqlite
+py-cord
+python-dotenv
+requests
