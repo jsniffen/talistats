@@ -49,7 +49,7 @@ async def cardstats(ctx, card_id: str):
     if card_id in stats:
         response = f"**Winrate for card {card_id} by play count:**\n"
         for played, data in stats[card_id].items():
-            response += (f"Played {played} time: {data['played']} matches, "
+            response += (f"Played {played} time {data['played']} matches, "
                          f"Winrate: {data['winrate']:.2f}%\n")
     else:
         response = f"No data found for card {card_id}."
