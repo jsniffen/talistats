@@ -2,3 +2,4 @@ aiosqlite
 py-cord
 python-dotenv
 requests
+boto3
