@@ -17,7 +17,7 @@ def create_tables():
             (id text,
                 p1_hero text, p1_avg_value real,
                 p2_hero text, p2_avg_value real,
-                first integer, winner integer,
+                format text, first integer, winner integer,
                 turns integer, date timestamp
             )
         """)
@@ -32,14 +32,14 @@ async def insert_card(cursor, card, match_id, player):
             card.pitched, card.played, match_id, player))
 
 
-async def insert_match(match):
+async def insert_match(match, format="cc"):
     p1, p2 = match.players
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.cursor()
         await cursor.execute("""insert into matches
-            (id, p1_hero, p1_avg_value, p2_hero, p2_avg_value, first, winner, turns, date)
-            values (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (match.id, p1.hero, p1.avg_value, p2.hero, p2.avg_value,
+            (id, p1_hero, p1_avg_value, p2_hero, p2_avg_value, format, first, winner, turns, date)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (match.id, p1.hero, p1.avg_value, p2.hero, p2.avg_value, format,
                     match.first(), match.winner(), match.turns, match.date))
 
         for card in p1.cards:
@@ -71,9 +71,9 @@ async def match_exists(match):
 
 async def distinct_heroes(ctx):
     query = """
-        select distinct(p1_hero) from matches where p1_hero like concat('%', ?, '%')
+        select distinct(p1_hero) from matches where p1_hero like '%' || ? || '%'
         union
-        select distinct(p2_hero) from matches where p2_hero like concat('%', ?, '%')
+        select distinct(p2_hero) from matches where p2_hero like '%' || ? || '%'
     """
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute(query, (ctx.value, ctx.value)) as cursor:

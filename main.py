@@ -13,6 +13,7 @@ import traceback
 load_dotenv()
 
 bot = discord.Bot()
+formats = ["cc", "draft", "ll", "sealed", "blitz"]
 
 @bot.command()
 async def winrate(ctx, hero: discord.Option(str, autocomplete=db.distinct_heroes)):
@@ -26,7 +27,7 @@ async def winrate(ctx, hero: discord.Option(str, autocomplete=db.distinct_heroes
         await ctx.respond(f"Error calculating winrate for {hero}")
 
 @bot.command()
-async def report(ctx, match_id: discord.Option(str)):
+async def report(ctx, match_id: discord.Option(str), format: discord.Option(str, default="cc", choices=formats)):
     try:
         match = talishar.get_match_stats(match_id)
 
@@ -64,7 +65,6 @@ if __name__ == "__main__":
     # except Exception as e:
     #     print(e)
     #     pass
-    # match = talishar.get_match_stats("422932")
 
     db.create_tables()
     print("Starting bot...")
