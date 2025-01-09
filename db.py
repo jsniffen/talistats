@@ -110,3 +110,33 @@ async def winrates(hero):
                     "winrate": row[2],
                 })
             return results
+
+async def card_stats(card_id):
+    query = """
+        SELECT card_id, played, SUM(CASE WHEN match_result = 1 THEN 1 ELSE 0 END) AS wins, COUNT(*) AS total_matches
+        FROM cards
+        GROUP BY card_id, played
+    """
+
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(query, (card_id,)) as cursor:
+            card_stats = {}
+
+            async for row in cursor:
+                card_id = row[0]
+                played = row[1]
+                wins = row[2]
+                total_matches = row[3]
+
+                if card_id not in card_stats:
+                    card_stats[card_id] = {}
+
+                if played > 0:
+                    winrate = (wins / total_matches) if total_matches > 0 else 0
+                    card_stats[card_id][played] = {
+                        "played": total_matches,
+                        "wins": wins,
+                        "winrate": winrate
+                    }
+                
+        return card_stats
