@@ -9,80 +9,104 @@ def create_tables():
 
         cursor.execute("""create table if not exists cards
             (id text, name text, pitch integer, num_copies integer,
-                match_id text, player integer, player_name text,
-                blocked integer, pitched integer, played integer
-            )
+                blocked integer, pitched integer, played integer,
+                match_id text, player integer)
         """)
 
         cursor.execute("""create table if not exists matches
             (id text,
-                player_1_name text, player_1_score integer, player_1_avg_value real,
-                player_2_name text, player_2_score integer, player_2_avg_value real,
-                first_player integer, turns integer, date timestamp
+                p1_hero text, p1_avg_value real,
+                p2_hero text, p2_avg_value real,
+                first integer, winner integer,
+                turns integer, date timestamp
             )
         """)
 
         db.commit()
 
-async def insert_card(cursor, card):
-    await cursor.execute("insert into cards values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (card.id, card.name, card.pitch, card.num_copies, card.match_id,
-            card.player, card.player_name, card.blocked, card.pitched, card.played))
+async def insert_card(cursor, card, match_id, player):
+    await cursor.execute("""insert into cards
+            (id, name, pitch, num_copies, blocked, pitched, played, match_id, player)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (card.id, card.name, card.pitch, card.num_copies, card.blocked,
+            card.pitched, card.played, match_id, player))
 
 
 async def insert_match(match):
+    p1, p2 = match.players
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.cursor()
-        await cursor.execute("insert into matches values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (match.id,
-                    match.p1_hero, match.p1_score, match.p1_avg_value,
-                    match.p2_hero, match.p2_score, match.p2_avg_value,
-                    match.first_player, match.turns, match.date))
+        await cursor.execute("""insert into matches
+            (id, p1_hero, p1_avg_value, p2_hero, p2_avg_value, first, winner, turns, date)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (match.id, p1.hero, p1.avg_value, p2.hero, p2.avg_value,
+                    match.first(), match.winner(), match.turns, match.date))
 
-        for card in match.p1_cards + match.p2_cards:
-            await cursor.execute("insert into cards values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (card.id, card.name, card.pitch, card.num_copies, card.match_id,
-                    card.player, card.player_name, card.blocked, card.pitched, card.played))
+        for card in p1.cards:
+            await insert_card(cursor, card, match.id, 1)
+
+        for card in p2.cards:
+            await insert_card(cursor, card, match.id, 2)
 
         await db.commit()
 
 async def match_exists(match):
+    p1, p2 = match.players
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute("""
                 select * from matches
-                where player_1_name == ?
-                and player_1_score == ?
-                and player_1_avg_value == ?
-                and player_2_name == ?
-                and player_2_score == ?
-                and player_2_avg_value == ?
-                and first_player == ?
+                where p1_hero == ?
+                and p1_avg_value == ?
+                and p2_hero == ?
+                and p2_avg_value == ?
+                and first == ?
+                and winner == ?
                 and turns == ?
                 and date >= Datetime(?, '-1 hour')
-            """, (match.p1_hero, match.p1_score, match.p1_avg_value,
-                match.p2_hero, match.p2_score, match.p2_avg_value,
-                match.first_player, match.turns, match.date)) as cursor:
+            """, (p1.hero, p1.avg_value, p2.hero, p2.avg_value,
+                match.first(), match.winner(), match.turns, match.date)) as cursor:
             async for row in cursor:
                 return True
         return False
 
 async def distinct_heroes(ctx):
+    query = """
+        select distinct(p1_hero) from matches where p1_hero like concat('%', ?, '%')
+        union
+        select distinct(p2_hero) from matches where p2_hero like concat('%', ?, '%')
+    """
     async with aiosqlite.connect(DB_NAME) as db:
-        async with db.execute("select distinct(player_name) from cards where player_name like concat('%', ?, '%')", (ctx.value,)) as cursor:
+        async with db.execute(query, (ctx.value, ctx.value)) as cursor:
             heroes = []
             async for row in cursor:
                 heroes.append(row[0])
             return heroes
 
-async def get_winrate(hero):
+async def distinct_cards(ctx):
+    query = "select distinct(name) from cards where name like concat('%', ?, '%')"
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(query, (ctx.value, ctx.value)) as cursor:
+            cards = []
+            async for row in cursor:
+                cards.append(row[0])
+            return cards
+
+async def winrates(hero):
     query = """
-        select cast(wins as float)/(wins+losses)*100 as winrate from (select
-                sum(case when player_1_name == ? and player_1_score == 1 or player_2_name == ? and player_2_score == 1 then 1 else 0 end) as wins,
-                sum(case when player_1_name == ? and player_1_score == 0 or player_2_name == ? and player_2_score == 0 then 1 else 0 end) as losses
-                from matches)
+	select hero, opp, (cast(sum(win) as float)/count(*))*100 as winrate from 
+	(
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win from matches where p1_hero == ?
+		union all
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win from matches where p2_hero == ?
+	) group by opp
     """
     async with aiosqlite.connect(DB_NAME) as db:
-        async with db.execute(query, (hero, hero, hero, hero)) as cursor:
+        async with db.execute(query, (hero, hero)) as cursor:
+            results = []
             async for row in cursor:
-                return row[0]
-            return None
+                results.append({
+                    "hero": row[0],
+                    "opponent": row[1],
+                    "winrate": row[2],
+                })
+            return results
