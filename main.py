@@ -17,8 +17,10 @@ bot = discord.Bot()
 @bot.command()
 async def winrate(ctx, hero: discord.Option(str, autocomplete=db.distinct_heroes)):
     try:
-        winrate = await db.get_winrate(hero)
-        await ctx.respond(f"{hero} winrate: {winrate:.0f}%")
+        winrates = await db.winrates(hero)
+
+        lines = [f"{x['hero']} vs. {x['opponent']}: {x['winrate']:.0f}%" for x in winrates]
+        await ctx.respond("\n".join(lines))
     except:
         print(traceback.format_exc())
         await ctx.respond(f"Error calculating winrate for {hero}")
@@ -62,6 +64,7 @@ if __name__ == "__main__":
     # except Exception as e:
     #     print(e)
     #     pass
+    # match = talishar.get_match_stats("422932")
 
     db.create_tables()
     print("Starting bot...")
