@@ -94,5 +94,3 @@ def get_match_stats(match_id):
     p2 = requests.get(f"https://api.talishar.net/game/zzGameStatsAPI.php?gameName={match_id}&playerID=2").json()
 
     return Match.from_match_stats(p1, p2)
-
-m = get_match_stats("438674")
