@@ -1,7 +1,8 @@
-from dotenv import load_dotenv
 from discord.ext import tasks
-import os
+from dotenv import load_dotenv
 import boto3
+import os
+import traceback
 
 load_dotenv()
 
@@ -17,5 +18,11 @@ def download_db():
 
 @tasks.loop(minutes=1.0)
 async def upload_db():
-    s3 = boto3.client("s3", endpoint_url=ENDPOINT, aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY)
-    s3.upload_file(DB_NAME, SPACE, DB_NAME)
+    try:
+        s3 = boto3.client("s3", endpoint_url=ENDPOINT, aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY)
+        s3.upload_file(DB_NAME, SPACE, DB_NAME)
+        print(f"Successfully uploaded {DB_NAME} to {SPACE}")
+    except:
+        print(f"Failed to upload {DB_NAME} to {SPACE}")
+        print(traceback.format_exc())
+

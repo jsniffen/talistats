@@ -1,7 +1,3 @@
-# TODO:
-#   - add better logging
-#   - add a way to filter format?
-
 from dotenv import load_dotenv
 import db
 import discord
@@ -27,7 +23,9 @@ async def winrate(ctx, hero: discord.Option(str, autocomplete=db.distinct_heroes
 
         lines = [f"{x['hero']} vs. {x['opponent']}: {x['winrate']:.0f}%" for x in winrates]
         await ctx.respond("\n".join(lines))
+        print(f"Successfully handled winrate: hero={hero}")
     except:
+        print(f"Failed to handle winrate: hero={hero}")
         print(traceback.format_exc())
         await ctx.respond(f"Error calculating winrate for {hero}")
 
@@ -47,7 +45,9 @@ async def report(ctx, match_id: discord.Option(str), format: discord.Option(str,
         await db.insert_match(match)
         await ctx.respond(f"Added result: {match.summary()}")
 
+        print(f"Successfully handled report: match_id={match_id} format={format}")
     except Exception:
+        print(f"Failed to handle report: match_id={match_id} format={format}")
         print(traceback.format_exc())
         await ctx.respond("Error retrieving results from talishar")
 
