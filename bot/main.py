@@ -7,7 +7,6 @@ import talishar
 import traceback
 
 load_dotenv()
-DB_NAME = "talistats.sqlite"
 
 bot = discord.Bot()
 formats = ["cc", "draft", "ll", "sealed", "blitz"]
