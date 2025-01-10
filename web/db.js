@@ -17,3 +17,21 @@ export const getDistinctHeroes = () => {
 	}
 	return rows.map(row => row.hero);
 };
+
+export const getAllWinrates = () => {
+	const stmt = db.prepare(`
+		select hero, opp, sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win from matches
+		union all
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win from matches)
+		group by hero, opp
+		order by hero, opp
+	`);
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
