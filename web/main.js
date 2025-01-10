@@ -10,10 +10,10 @@ mount("main", () => {
 	for (const hero of heroes) {
 		data[hero] = {};
 		for (const opp of heroes) {
-			data[hero][opp] = 0;
+			data[hero][opp] = "-";
 			for (const winrate of winrates) {
 				if (winrate.hero == hero && winrate.opp == opp) {
-					data[hero][opp] = winrate.winrate;
+					data[hero][opp] = winrate.winrate + "%";
 				}
 			}
 		}
@@ -34,7 +34,7 @@ mount("main", () => {
 		const row = e("tr")
 		row.append(e("td", hero));
 		for (const [opp, winrate] of Object.entries(matchup)) {
-			row.append(e("td", winrate + "%"));
+			row.append(e("td", winrate));
 		}
 		table.append(row);
 	}
