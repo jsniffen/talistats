@@ -80,4 +80,4 @@ if __name__ == "__main__":
 
     db.create_tables()
     print("Starting bot...")
-    bot.run(os.getenv(BOT_TOKEN))
+    bot.run(os.getenv("BOT_TOKEN"))
