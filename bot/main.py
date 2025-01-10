@@ -7,6 +7,7 @@ import talishar
 import traceback
 
 load_dotenv()
+DB_NAME = "../talistats.sqlite"
 
 bot = discord.Bot()
 formats = ["cc", "draft", "ll", "sealed", "blitz"]
@@ -51,14 +52,32 @@ async def report(ctx, match_id: discord.Option(str), format: discord.Option(str,
         print(traceback.format_exc())
         await ctx.respond("Error retrieving results from talishar")
 
+@bot.command()
+async def cardstats(ctx, card_name: str):
+    # not case sensitive fix
+    real_name = ' '.join([word.capitalize() for word in card_name.lower().split()])
+
+    stats = await db.card_stats(real_name)
+    
+    if real_name in stats:
+        response = f"Winrate for {real_name} by play count:\n"
+        for played, data in stats[real_name].items():
+            response += (f"Played {played} time(s) in {data['played']} matches.\n"
+                         f"Winrate: {data['winrate']:.2f}%\n")
+    else:
+        response = f"No data found for card {real_name}."
+    
+    await ctx.send(response)
+
+
 if __name__ == "__main__":
     # try:
     #     os.remove("talistats.sqlite")
     # except Exception as e:
     #     print(e)
     #     pass
-    storage.download_db()
+    #storage.download_db()
 
-    # db.create_tables()
+    db.create_tables()
     print("Starting bot...")
-    bot.run(os.getenv("BOT_TOKEN"))
+    bot.run(os.getenv(BOT_TOKEN))

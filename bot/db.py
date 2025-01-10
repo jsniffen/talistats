@@ -111,32 +111,47 @@ async def winrates(hero):
                 })
             return results
 
-async def card_stats(card_id):
+async def card_stats(cards):
+    if isinstance(cards, str):
+        cards = [cards]
+
     query = """
-        SELECT card_id, played, SUM(CASE WHEN match_result = 1 THEN 1 ELSE 0 END) AS wins, COUNT(*) AS total_matches
-        FROM cards
-        GROUP BY card_id, played
+    SELECT c.name, c.played, 
+           SUM(CASE WHEN m.winner = c.player THEN 1 ELSE 0 END) AS wins,
+           COUNT(*) AS total_matches
+    FROM cards c
+    JOIN matches m ON c.match_id = m.id
+    WHERE c.name = ?
+    GROUP BY c.id, c.played
     """
 
+    card_stats = {}
+
     async with aiosqlite.connect(DB_NAME) as db:
-        async with db.execute(query, (card_id,)) as cursor:
-            card_stats = {}
+        for card_name in cards:
+            print(f"Querying stats for card: {card_name}")
+            async with db.execute(query, (card_name,)) as cursor:
+                rows_found = False
+                async for row in cursor:
+                    rows_found = True
+                    print(f"Row fetched: {row}")
 
-            async for row in cursor:
-                card_id = row[0]
-                played = row[1]
-                wins = row[2]
-                total_matches = row[3]
+                    id = row[0]
+                    played = row[1]
+                    wins = row[2]
+                    total_matches = row[3]
 
-                if card_id not in card_stats:
-                    card_stats[card_id] = {}
+                    if id not in card_stats:
+                        card_stats[id] = {}
 
-                if played > 0:
-                    winrate = (wins / total_matches) if total_matches > 0 else 0
-                    card_stats[card_id][played] = {
-                        "played": total_matches,
-                        "wins": wins,
-                        "winrate": winrate
-                    }
-                
-        return card_stats
+                    if played > 0:
+                        winrate = (wins / total_matches) * 100 if total_matches > 0 else 0
+                        card_stats[id][played] = {
+                            "played": total_matches,
+                            "wins": wins,
+                            "winrate": winrate,
+                        }
+                if not rows_found:
+                    print(f"No data found for card: {card_name}")
+
+    return card_stats
