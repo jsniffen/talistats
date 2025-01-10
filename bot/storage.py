@@ -20,7 +20,8 @@ def download_db():
 async def upload_db():
     try:
         s3 = boto3.client("s3", endpoint_url=ENDPOINT, aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY)
-        s3.upload_file(DB_NAME, SPACE, DB_NAME, ExtraArgs={'ACL': 'public-read'})
+        s3.upload_file(DB_NAME, SPACE, DB_NAME)
+        s3.put_object_acl(ACL='public-read', Bucket=SPACE, Key=DB_NAME)
         print(f"Successfully uploaded {DB_NAME} to {SPACE}")
     except:
         print(f"Failed to upload {DB_NAME} to {SPACE}")
