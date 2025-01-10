@@ -7,7 +7,7 @@ import talishar
 import traceback
 
 load_dotenv()
-DB_NAME = "../talistats.sqlite"
+DB_NAME = "talistats.sqlite"
 
 bot = discord.Bot()
 formats = ["cc", "draft", "ll", "sealed", "blitz"]
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # except Exception as e:
     #     print(e)
     #     pass
-    #storage.download_db()
+    storage.download_db()
 
     db.create_tables()
     print("Starting bot...")
