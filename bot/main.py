@@ -225,7 +225,9 @@ if __name__ == "__main__":
     # except Exception as e:
     #     print(e)
     #     pass
+    storage.download_db()
 
+    #db.create_tables()
     db.create_tables()
     print("Starting bot...")
     bot.run(os.getenv("BOT_TOKEN"))
