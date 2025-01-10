@@ -191,6 +191,22 @@ async def report(ctx, match_id: discord.Option(str), format: discord.Option(str,
         await ctx.respond("Error retrieving results from talishar")
 
 @bot.command()
+async def cardstats(ctx, card_name: str):
+    # not case sensitive fix
+    real_name = ' '.join([word.capitalize() for word in card_name.lower().split()])
+
+    stats = await db.card_stats(real_name)
+    
+    if real_name in stats:
+        response = f"Winrate for {real_name} by play count:\n"
+        for played, data in stats[real_name].items():
+            response += (f"Played {played} time(s) in {data['played']} matches.\n"
+                         f"Winrate: {data['winrate']:.2f}%\n")
+    else:
+        response = f"No data found for card {real_name}."
+    
+    await ctx.send(response)
+
 async def createqueue(ctx):
     try:
         await ctx.send(embed=createQueuePanel(), view=QueueButtons())
@@ -227,7 +243,6 @@ if __name__ == "__main__":
     #     pass
     storage.download_db()
 
-    #db.create_tables()
     db.create_tables()
     print("Starting bot...")
     bot.run(os.getenv("BOT_TOKEN"))
