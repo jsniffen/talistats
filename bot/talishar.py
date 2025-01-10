@@ -23,7 +23,7 @@ class Player:
     first: bool
 
     def __str__(self):
-        return f"{self.hero} ({self.avg_value})"
+        return f"{self.hero} ({"1st" if self.first else "2nd"}, {self.avg_value})"
 
 @dataclass
 class Match:
@@ -39,7 +39,6 @@ class Match:
         id = str(uuid.uuid4())
 
         turns = p1["turns"]
-        first_player = 1 if p1["firstPlayer"] == 1 else 2
         date = datetime.now()
 
         players = []
@@ -96,3 +95,4 @@ def get_match_stats(match_id):
 
     return Match.from_match_stats(p1, p2)
 
+m = get_match_stats("438674")
