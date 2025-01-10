@@ -1,8 +1,3 @@
-# TODO:
-#   - add better logging
-#   - add a way to filter format?
-
-
 from dotenv import load_dotenv
 import db
 import discord
@@ -191,7 +186,7 @@ async def report(ctx, match_id: discord.Option(str), format: discord.Option(str,
         await ctx.respond("Error retrieving results from talishar")
 
 @bot.command()
-async def cardstats(ctx, card_name: str):
+async def cardstats(ctx, card_name: discord.Option(str, autocomplete=db.distinct_cards)):
     # not case sensitive fix
     real_name = ' '.join([word.capitalize() for word in card_name.lower().split()])
 
