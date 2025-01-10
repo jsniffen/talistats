@@ -3,7 +3,6 @@ import {getAllWinrates} from "./db.js";
 
 mount("main", () => {
 	const winrates = getAllWinrates();
-	console.log(winrates);
 	const heroes = new Set(winrates.map(w => w.hero));
 
 	const data = {};
@@ -13,13 +12,11 @@ mount("main", () => {
 			data[hero][opp] = "-";
 			for (const winrate of winrates) {
 				if (winrate.hero == hero && winrate.opp == opp) {
-					data[hero][opp] = winrate.winrate + "%";
+					data[hero][opp] = winrate;
 				}
 			}
 		}
 	}
-
-	console.log(data);
 
 	const table = e("table");
 
@@ -34,7 +31,12 @@ mount("main", () => {
 		const row = e("tr")
 		row.append(e("td", hero));
 		for (const [opp, winrate] of Object.entries(matchup)) {
-			row.append(e("td", winrate));
+			if (winrate == "-") {
+				row.append(e("td", winrate));
+			} else {
+				const total = `${winrate.wins}/${winrate.total}`
+				row.append(e(`td[data-tooltip=${total}]`, winrate.winrate + "%"));
+			}
 		}
 		table.append(row);
 	}
