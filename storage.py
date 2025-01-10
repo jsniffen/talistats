@@ -16,7 +16,7 @@ def download_db():
     s3 = boto3.client("s3", endpoint_url=ENDPOINT, aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY)
     s3.download_file(SPACE, DB_NAME, DB_NAME)
 
-@tasks.loop(minutes=1.0)
+@tasks.loop(minutes=15.0)
 async def upload_db():
     try:
         s3 = boto3.client("s3", endpoint_url=ENDPOINT, aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY)
