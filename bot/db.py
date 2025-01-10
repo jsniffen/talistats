@@ -85,7 +85,7 @@ async def distinct_heroes(ctx):
 async def distinct_cards(ctx):
     query = "select distinct(name) from cards where name like '%' || ? || '%'"
     async with aiosqlite.connect(DB_NAME) as db:
-        async with db.execute(query, (ctx.value, ctx.value)) as cursor:
+        async with db.execute(query, (ctx.value,)) as cursor:
             cards = []
             async for row in cursor:
                 cards.append(row[0])
