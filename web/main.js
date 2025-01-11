@@ -1,7 +1,8 @@
-import {element as e, mount} from "./tiny.js";
+import {element as e, mount, router} from "./tiny.js";
 import {getAllWinrates} from "./db.js";
+import {homePage} from "./pages/home.js";
 
-mount("main", () => {
+const winrates = () => {
 	const winrates = getAllWinrates();
 	const heroes = new Set(winrates.map(w => w.hero));
 
@@ -42,4 +43,15 @@ mount("main", () => {
 	}
 
 	return e("div", table);
+};
+
+mount("main", () => {
+	return router({
+		"/#/winrates": () => {
+			return winrates();
+		},
+		"*": () => {
+			return homePage();
+		},
+	});
 });

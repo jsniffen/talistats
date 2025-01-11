@@ -202,6 +202,7 @@ async def cardstats(ctx, card_name: discord.Option(str, autocomplete=db.distinct
     
     await ctx.send(response)
 
+@bot.command()
 async def createqueue(ctx):
     try:
         await ctx.send(embed=createQueuePanel(), view=QueueButtons())

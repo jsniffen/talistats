@@ -35,3 +35,20 @@ export const getAllWinrates = () => {
 	}
 	return rows;
 };
+
+export const getHeroGamesPlayed = () => {
+	const stmt = db.prepare(`
+		select hero, count(*) as numMatches from (
+		select p1_hero as hero from matches
+		union all
+		select p2_hero as hero from matches
+		) group by hero
+	`);
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
