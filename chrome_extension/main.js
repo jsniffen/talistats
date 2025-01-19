@@ -12,20 +12,35 @@ const setStatus = msg => {
 };
 
 const reportMatch = format => {
-	chrome.storage.sync.get({talistatsURL: ""}, items => {
+	chrome.storage.sync.get({talistatsURL: ""}, async items => {
 		if (items.talistatsURL == "") {
 			setStatus("Error: Set the Talistats URL in the extension options page");
 			return;
 		}
 
-		setStatus("OK");
+		const match_id = location.href.split("/").slice(-1)[0];
+
+		const URL = items.talistatsURL + "?" + new URLSearchParams({format, match_id}).toString();
+		try {
+			const resp = await fetch(URL);
+			if (resp.status != 200) {
+				setStatus("Internal server error");
+				return;
+			}
+
+			const text = await resp.text();
+			setStatus(text);
+		} catch (e) {
+			console.log(e);
+			setStatus("Internal server error");
+		}
 	});
 };
 
 const createDiv = (endGameStats) => {
 	const div = document.createElement("div");
 	div.setAttribute("id", "talistats");
-	div.style.maxWidth = "150px";
+	div.style.maxWidth = "250px";
 
 	const h2 = document.createElement("h2");
 	h2.textContent = "Talistats";
