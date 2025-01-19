@@ -6,6 +6,7 @@ import storage
 import talishar
 import traceback
 import threading
+import server
 
 load_dotenv()
 
@@ -240,5 +241,7 @@ if __name__ == "__main__":
     storage.download_db()
 
     db.create_tables()
+    server.start()
+
     print("Starting bot...")
     bot.run(os.getenv("BOT_TOKEN"))

@@ -4,3 +4,4 @@ boto3
 py-cord
 python-dotenv
 requests
+bottle
