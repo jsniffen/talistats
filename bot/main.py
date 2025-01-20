@@ -241,7 +241,7 @@ if __name__ == "__main__":
     storage.download_db()
 
     db.create_tables()
-    server.start()
+    # server.start()
 
     print("Starting bot...")
     bot.run(os.getenv("BOT_TOKEN"))
