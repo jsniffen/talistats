@@ -1,0 +1,13 @@
+.progress-bar {
+	height: 30px;
+}
+
+.progress-bar-text {
+	position: absolute;
+	font-weight: 600;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+	text-align: center;
+}

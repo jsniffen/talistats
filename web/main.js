@@ -1,6 +1,7 @@
 import {element as e, mount, router} from "./tiny.js";
 import {getAllWinrates} from "./db.js";
 import {homePage} from "./pages/home.js";
+import {heroPage} from "./pages/hero.js";
 
 const winrates = () => {
 	const winrates = getAllWinrates();
@@ -47,6 +48,9 @@ const winrates = () => {
 
 mount("main", () => {
 	return router({
+		"/#/hero": () => {
+			return heroPage();
+		},
 		"/#/winrates": () => {
 			return winrates();
 		},

@@ -36,6 +36,26 @@ export const getAllWinrates = () => {
 	return rows;
 };
 
+export const getHeroWinrate = (hero, first) => {
+	const stmt = db.prepare(`
+		select hero, opp, sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win, first == 1 as first from matches
+		union all
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win, first == 2 as first from matches)
+		where hero == $hero and ($first is null or first == $first)
+		group by hero, opp
+		order by winrate desc
+	`);
+	stmt.bind({$hero: hero, $first: first});
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
+
 export const getHeroGamesPlayed = () => {
 	const stmt = db.prepare(`
 		select hero, count(*) as numMatches from (
