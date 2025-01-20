@@ -234,13 +234,7 @@ async def on_message(message: discord.Message):
         await message.author.send("Unknown Message Error")
 
 if __name__ == "__main__":
-    # try:
-    #     os.remove("talistats.sqlite")
-    # except Exception as e:
-    #     print(e)
-    #     pass
     storage.download_db()
-    asyncio.run(storage.upload_db())
 
     db.create_tables()
     server.start()
