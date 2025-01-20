@@ -7,6 +7,7 @@ import talishar
 import traceback
 import threading
 import server
+import asyncio
 
 load_dotenv()
 
@@ -239,6 +240,7 @@ if __name__ == "__main__":
     #     print(e)
     #     pass
     storage.download_db()
+    asyncio.run(storage.upload_db())
 
     db.create_tables()
     server.start()
