@@ -18,6 +18,12 @@ def download_db():
 
 @tasks.loop(minutes=1.0)
 async def upload_db():
+    if not os.path.exists(DB_NAME):
+        print(DB_NAME, "does not exists")
+        return
+    else:
+        print(DB_NAME, "exists!")
+
     try:
         s3 = boto3.client("s3", endpoint_url=ENDPOINT, aws_access_key_id=ACCESS_ID, aws_secret_access_key=SECRET_KEY)
         print(s3, DB_NAME, SPACE, DB_NAME)
