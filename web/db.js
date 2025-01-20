@@ -1,3 +1,5 @@
+import {DB_URL} from "./env.js";
+
 const sql = await initSqlJs({locateFile: fn => `https://sql.js.org/dist/${fn}`});
 const resp = await fetch("https://talistats-db.nyc3.cdn.digitaloceanspaces.com/talistats-db/talistats.sqlite");
 const buf = await resp.arrayBuffer();
