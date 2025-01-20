@@ -234,7 +234,10 @@ async def on_message(message: discord.Message):
         await message.author.send("Unknown Message Error")
 
 if __name__ == "__main__":
-    storage.download_db()
+    try:
+        storage.download_db()
+    except:
+        pass
 
     db.create_tables()
     server.start()
