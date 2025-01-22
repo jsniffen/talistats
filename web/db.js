@@ -5,6 +5,17 @@ const resp = await fetch(DB_URL);
 const buf = await resp.arrayBuffer();
 const db = new sql.Database(new Uint8Array(buf));
 
+export const getMostRecentMatches = () => {
+	const stmt = db.prepare("select * from matches order by date desc");
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
+
 export const getDistinctHeroes = () => {
 	const stmt = db.prepare(`
         select distinct(p1_hero) as hero from matches
