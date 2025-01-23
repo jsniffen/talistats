@@ -58,20 +58,24 @@ const createDiv = (endGameStats) => {
 
 		const buttons = endGameStats.querySelector("div[class^='_buttons']");
 
-		if (items.talistats.length == 0) {
+		let validOptions = false;
+		items.talistats.forEach(option => {
+			const {name, url} = option;
+
+			if (name == "" && url == "") return;
+
+			const button = buttons.firstChild.cloneNode(true);
+			button.style.marginBottom = "5px";
+			button.textContent = `Report to ${name}`;
+			button.onclick = () => reportMatch(name, url, select.value);
+			div.append(button);
+			validOptions = true;
+		})
+
+		if (!validOptions) {
 			const message = document.createElement("div");
 			message.textContent = "Set the Talistats servers in the extension options page";
 			div.append(message);
-		} else {
-			items.talistats.forEach(option => {
-				const {name, url} = option;
-
-				const button = buttons.firstChild.cloneNode(true);
-				button.style.marginBottom = "5px";
-				button.textContent = `Report to ${name}`;
-				button.onclick = () => reportMatch(name, url, select.value);
-				div.append(button);
-			})
 		}
 
 		const status = document.createElement("div");
