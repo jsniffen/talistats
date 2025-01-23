@@ -23,7 +23,7 @@ def index():
         return f"Cannot add duplicate result: {match.summary()}"
 
     # loop.run_until_complete(db.insert_match(match))
-    asyncio.run(db.insert_match(match))
+    asyncio.run(db.insert_match(match, format))
     return f"Added result: {match.summary()}"
 
 def start(port=8080):
