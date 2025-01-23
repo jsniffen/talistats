@@ -13,5 +13,5 @@
 		}
 	],
 	"options_page": "options.html",
-	"permissions": ["activeTab", "storage"]
+	"permissions": ["activeTab", "storage", "nativeMessaging"]
 }

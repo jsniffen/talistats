@@ -1,7 +1,16 @@
 const saveOptions = () => {
-	const talistatsURL = document.getElementById("talistats-url").value;
+	const talistats = [
+		{
+			url: document.getElementById("server-1-url").value.trim(),
+			name: document.getElementById("server-1-name").value.trim(),
+		},
+		{
+			url: document.getElementById("server-2-url").value.trim(),
+			name: document.getElementById("server-2-name").value.trim(),
+		},
+	];
 
-	chrome.storage.sync.set({talistatsURL}, () => {
+	chrome.storage.sync.set({talistats}, () => {
 		const status = document.getElementById("status");
 		status.textContent = "Options Saved";
 		setTimeout(() => {
@@ -11,8 +20,13 @@ const saveOptions = () => {
 };
 
 const restoreOptions = () => {
-	chrome.storage.sync.get({talistatsURL: ""}, items => {
-		document.getElementById("talistats-url").value = items.talistatsURL;
+	chrome.storage.sync.get({talistats: []}, items => {
+		items.talistats.forEach((item, i) => {
+			const {url, name} = item;
+
+			document.getElementById(`server-${i+1}-url`).value = url;
+			document.getElementById(`server-${i+1}-name`).value = name;
+		});
 	});
 };
  
