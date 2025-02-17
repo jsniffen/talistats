@@ -11,3 +11,48 @@
 	right: 0;
 	text-align: center;
 }
+
+.winrates {
+	overflow: scroll;
+}
+
+div.multiselect {
+	/* position: relative; */
+}
+
+span.chevron::after {
+	position: absolute;
+	top: 25%;
+	right: 22px;
+    display: inline-block;
+    width: 1rem;
+    height: calc(1rem* var(--pico-line-height, 1.5));
+    margin-inline-start: .25rem;
+    transform: rotate(0) translateX(.2rem);
+    background-image: var(--pico-icon-chevron);
+    background-size: 1rem auto;
+    background-repeat: no-repeat;
+    content: "";
+}
+
+th.sortable {
+	cursor: pointer;
+}
+
+th.sort::after {
+    display: inline-block;
+    width: 1rem;
+    height: calc(1rem* var(--pico-line-height, 1.5));
+    margin-inline-start: 0.5rem;
+    background-image: var(--pico-icon-chevron);
+    content: "";
+	transition: transform .3s;
+}
+
+th.sort-desc::after {
+	transform: rotate(0deg);
+}
+
+th.sort-asc::after {
+	transform: rotate(180deg);
+}

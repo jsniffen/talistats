@@ -1,8 +1,11 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
 import {getHeroWinrate, getDistinctHeroes, getHeroGamesPlayed} from "../db.js";
+import {multiselect} from "../components/multiselect.js";
 
 const [onHero, setHero] = state("");
 const [onGoing, setGoing] = state(3);
+
+const [onHeroCards, setHeroCards] = state([]);
 
 const heroDropdown = () => {
 	const heroes = getDistinctHeroes();
@@ -53,6 +56,9 @@ export const heroPage = () => {
 		e("div.grid",
 			heroDropdown(),
 			goingDropdown(),
+		),
+		e("div.grid",
+			multiselect(),
 		),
 
 		e("div", {ref: winrateDiv}),

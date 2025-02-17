@@ -31,6 +31,32 @@ export const getDistinctHeroes = () => {
 	return rows.map(row => row.hero);
 };
 
+export const getAggregateWinrates = (format, orderBy, order, query) => {
+	const stmt = db.prepare(`
+		select hero, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win from matches where format == $format
+		union all
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win from matches where format == $format)
+		where ($query is null or hero like concat("%", $query, "%"))
+		group by hero
+		order by
+		case when $orderBy == 'hero' and $order == 'asc' then hero end asc,
+		case when $orderBy == 'hero' and $order == 'desc' then hero end desc,
+		case when $orderBy == 'total' and $order == 'asc' then total end asc,
+		case when $orderBy == 'total' and $order == 'desc' then total end desc,
+		case when $orderBy == 'winrate' and $order == 'asc' then winrate end asc,
+		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc
+	`);
+	stmt.bind({$format: format, $query: query, $orderBy: orderBy, $order: order});
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
+
 export const getAllWinrates = () => {
 	const stmt = db.prepare(`
 		select hero, opp, sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
