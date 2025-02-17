@@ -52,9 +52,12 @@ mount("main", () => {
 		"/#/heroes": () => {
 			return heroesPage();
 		},
-		"/#/hero": () => {
-			return heroPage();
+		"/#/heroes/:hero": (args) => {
+			return heroPage(decodeURI(args.hero));
 		},
+		// "/#/hero": () => {
+		// 	return heroPage();
+		// },
 		"/#/winrates": () => {
 			return winrates();
 		},

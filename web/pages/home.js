@@ -1,5 +1,6 @@
 import {element as e} from "../tiny.js";
 import {getMostRecentMatches} from "../db.js";
+import {heroLink} from "../util.js";
 
 const recentMatches = () => {
 	const matches = getMostRecentMatches();
@@ -21,9 +22,9 @@ const recentMatches = () => {
 				const date = new Date(match.date);
 
 				return e("tr",
-					e("td", match.p1_hero),
+					e("td", heroLink(match.p1_hero)),
 					e("td", p1_score + " - " + p2_score),
-					e("td", match.p2_hero),
+					e("td", heroLink(match.p2_hero)),
 					e("td", match.turns),
 					e("td", date.toLocaleString()),
 					e("td", match.format),

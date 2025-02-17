@@ -1,13 +1,7 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
 import {getAggregateWinrates} from "../db.js";
+import {heroLink, round} from "../util.js";
 
-const heroLink = hero => {
-	return e(`a[href='/#/heroes/${hero}']`, hero);
-};
-
-const round = winrate => {
-	return Math.round(winrate*100)/100;
-}
 
 const [onFormat, setFormat] = state("cc");
 const [onQuery, setQuery] = state("");
