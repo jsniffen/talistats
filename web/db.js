@@ -31,6 +31,25 @@ export const getDistinctHeroes = () => {
 	return rows.map(row => row.hero);
 };
 
+export const getAggregateHeroWinrate = (hero) => {
+	const stmt = db.prepare(`
+		select hero, format, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win, format from matches
+		union all
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win, format from matches)
+		where hero == $hero
+		group by hero, format
+	`);
+	stmt.bind({$hero: hero});
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
+
 export const getAggregateWinrates = (format, orderBy, order, query) => {
 	const stmt = db.prepare(`
 		select hero, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
@@ -75,17 +94,54 @@ export const getAllWinrates = () => {
 	return rows;
 };
 
-export const getHeroWinrate = (hero, first) => {
+export const getFormats = hero => {
 	const stmt = db.prepare(`
-		select hero, opp, sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
-		select p1_hero as hero, p2_hero as opp, winner == 1 as win, first == 1 as first from matches
+		select distinct format from (
+		select p1_hero as hero, p2_hero as opp, format from matches
 		union all
-		select p2_hero as hero, p1_hero as opp, winner == 2 as win, first == 2 as first from matches)
-		where hero == $hero and ($first is null or first == $first)
-		group by hero, opp
-		order by winrate desc
+		select p2_hero as hero, p1_hero as opp, format from matches)
+		where hero == $hero
 	`);
-	stmt.bind({$hero: hero, $first: first});
+	stmt.bind({$hero: hero});
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows.map(r => r.format);
+};
+
+export const getOpponents = hero => {
+	const stmt = db.prepare(`
+		select distinct opp from (
+		select p1_hero as hero, p2_hero as opp from matches
+		union all
+		select p2_hero as hero, p1_hero as opp from matches)
+		where hero == $hero
+		order by opp
+	`);
+	stmt.bind({$hero: hero});
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows.map(r => r.opp);
+};
+
+export const getHeroWinrate = (hero, first, format) => {
+	const stmt = db.prepare(`
+		select hero, opp, format, sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win, first == 1 as first, format from matches
+		union all
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win, first == 2 as first, format from matches)
+		where hero == $hero and ($first is null or first == $first) and (format == $format)
+		group by hero, opp
+		order by opp
+	`);
+	stmt.bind({$hero: hero, $first: first, $format: format});
 	const result = stmt.get();
 
 	let rows = [];
