@@ -2,35 +2,34 @@ import {element as e, state, ref, onMany} from "../tiny.js";
 import {getAggregateWinrates} from "../db.js";
 import {heroLink, round} from "../util.js";
 
-
-const [onFormat, setFormat] = state("cc");
-const [onQuery, setQuery] = state("");
-const [onOrder, setOrder] = state(["hero", "asc"]);
-
-const thOnClick = (e, by) => {
-	e.classList.add("sort");
-
-	if (e.classList.contains("sort-desc")) {
-		e.classList.remove("sort-desc");
-		e.classList.add("sort-asc");
-		setOrder([by, "asc"]);
-	} else {
-		e.classList.remove("sort-asc");
-		e.classList.add("sort-desc");
-		setOrder([by, "desc"]);
-	}
-
-	e.parentNode.childNodes.forEach(node => {
-		if (node == e) return;
-
-		node.classList.remove("sort");
-		node.classList.remove("sort-desc");
-		node.classList.remove("sort-asc");
-	});
-};
-
 export const heroesPage = () => {
 	const tbody = ref();
+
+	const [onFormat, setFormat] = state("cc");
+	const [onQuery, setQuery] = state("");
+	const [onOrder, setOrder] = state(["hero", "asc"]);
+
+	const thOnClick = (e, by) => {
+		e.classList.add("sort");
+
+		if (e.classList.contains("sort-desc")) {
+			e.classList.remove("sort-desc");
+			e.classList.add("sort-asc");
+			setOrder([by, "asc"]);
+		} else {
+			e.classList.remove("sort-asc");
+			e.classList.add("sort-desc");
+			setOrder([by, "desc"]);
+		}
+
+		e.parentNode.childNodes.forEach(node => {
+			if (node == e) return;
+
+			node.classList.remove("sort");
+			node.classList.remove("sort-desc");
+			node.classList.remove("sort-asc");
+		});
+	};
 
 	const html = e("div",
 		e("div.grid",

@@ -230,11 +230,16 @@ export const getDecklist = (player, match_id) => {
 	return rows;
 };
 
-export const getCardStats = (hero, opp, first, format, orderBy, order) => {
+export const getCardStats = (query, hero, opp, first, format, orderBy, order, mustPlay) => {
 	const stmt = db.prepare(`
-		select sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate, * from (
+		select sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate,
+		(cast(sum(played) as float)/count(*)) as avg_played, sum(played) as total_played,
+		(cast(sum(pitched) as float)/count(*)) as avg_pitched, sum(pitched) as total_pitched,
+		(cast(sum(blocked) as float)/count(*)) as avg_blocked, sum(blocked) as total_blocked,
+		* from (
 			select player == winner as win, player == first as first, case when player == 1 then p1_hero else p2_hero end as hero, case when player == 1 then p2_hero else p1_hero end as opp, c.id as card_id, * from cards c
 			join matches m on m.id == c.match_id
+			where (not $mustPlay or played > 0) and ($query is null or name like concat("%", $query, "%"))
 		)
 		where name != "" and hero == $hero and ($opp is null or opp == $opp) and ($first is null or $first == first) and $format == format
 		group by card_id
@@ -244,9 +249,15 @@ export const getCardStats = (hero, opp, first, format, orderBy, order) => {
 		case when $orderBy == 'total' and $order == 'asc' then total end asc,
 		case when $orderBy == 'total' and $order == 'desc' then total end desc,
 		case when $orderBy == 'winrate' and $order == 'asc' then winrate end asc,
-		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc
+		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc,
+		case when $orderBy == 'avg_played' and $order == 'asc' then avg_played end asc,
+		case when $orderBy == 'avg_played' and $order == 'desc' then avg_played end desc,
+		case when $orderBy == 'avg_pitched' and $order == 'asc' then avg_pitched end asc,
+		case when $orderBy == 'avg_pitched' and $order == 'desc' then avg_pitched end desc,
+		case when $orderBy == 'avg_blocked' and $order == 'asc' then avg_blocked end asc,
+		case when $orderBy == 'avg_blocked' and $order == 'desc' then avg_blocked end desc
 	`);
-	stmt.bind({$hero: hero, $opp: opp, $first: first, $format: format, $orderBy: orderBy, $order: order});
+	stmt.bind({$query: query, $hero: hero, $opp: opp, $first: first, $format: format, $orderBy: orderBy, $order: order, $mustPlay: mustPlay});
 	const result = stmt.get();
 
 	let rows = [];
