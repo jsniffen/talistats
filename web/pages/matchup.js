@@ -1,5 +1,5 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
-import {getDecklist, getMatches, getDistinctHeroes, getCards} from "../db.js";
+import {getOpponents, getDecklist, getMatches, getDistinctHeroes, getCards} from "../db.js";
 import {round, heroLink} from "../util.js";
 
 export const matchup = () => {
@@ -10,6 +10,7 @@ export const matchup = () => {
 
 	const matchRows = ref();
 	const statsRows = ref();
+	const oppDropdownElement = ref();
 
 	const [onHero, setHero] = state("");
 	const [onGoing, setGoing] = state(3);
@@ -76,6 +77,19 @@ export const matchup = () => {
 
 		return e("select[name=select]", { onchange: e => setOpponent(e.target.value) },
 			...heroes.map(hero => e("option", hero)),
+		);
+	};
+
+	const oppDropdown = (hero, opp) => {
+		const heroes = getOpponents(hero);
+
+		const options = heroes.map(hero => e("option", hero))
+		options.forEach(option => {
+			if (option.value == opp) option.selected = true
+		});
+
+		return e("select[name=select]", { onchange: e => setOpponent(e.target.value) },
+			...options,
 		);
 	};
 
@@ -173,7 +187,6 @@ export const matchup = () => {
 
 	const openModal = modal => {
 		const html = document.documentElement;
-		console.log(html);
 		html.classList.add("modal-is-open", "modal-is-opening");
 		setTimeout(() => {
 			html.classList.remove("modal-is-opening");
@@ -285,7 +298,7 @@ export const matchup = () => {
 		),
 		e("div",
 			e("h3", "Opponent"),
-			opponentDropdown(),
+			e("div", {oppDropdownElement}),
 			e("article.card-list",
 				e("div", 
 					e("h5", "Included"),
@@ -334,6 +347,9 @@ export const matchup = () => {
 		opponentCardsExcluded.element.innerHTML = "";
 		matchRows.element.innerHTML = "";
 		statsRows.element.innerHTML = "";
+		oppDropdownElement.element.innerHTML = "";
+
+		oppDropdownElement.element.append(oppDropdown(hero, opponent));
 
 		const heroIncluded = [];
 		const heroExcluded = [];
