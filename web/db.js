@@ -16,6 +16,22 @@ export const getMostRecentMatches = () => {
 	return rows;
 };
 
+export const getCards = (query, limit) => {
+	const stmt = db.prepare(`
+		select distinct(name), id, pitch from cards
+		where name like concat("%", $query, "%")
+		limit $limit
+	`);
+	stmt.bind({$query: query, $limit: limit});
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
+
 export const getDistinctHeroes = () => {
 	const stmt = db.prepare(`
         select distinct(p1_hero) as hero from matches
@@ -159,6 +175,52 @@ export const getHeroGamesPlayed = () => {
 		select p2_hero as hero from matches
 		) group by hero
 	`);
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
+
+export const getMatches = (hero, heroInclude, heroExclude, opp, oppInclude, oppExclude, format, first) => {
+	const heroIncludeList = heroInclude.map(id => `'${id}'`).join(",");
+	const heroExcludeList = heroExclude.map(id => `'${id}'`).join(",");
+	const oppIncludeList = oppInclude.map(id => `'${id}'`).join(",");
+	const oppExcludeList = oppExclude.map(id => `'${id}'`).join(",");
+	const query = `
+		with hero_matches as (
+			select * from (
+			select p1_hero as hero, p2_hero as opp, p1_avg_value as hero_avg_value, p2_avg_value as opp_avg_value, winner == 1 as win, first == 1 as first, 1 as hero_player, 2 as opp_player, * from matches
+			union all
+			select p2_hero as hero, p1_hero as opp, p2_avg_value as hero_avg_value, p1_avg_value as opp_avg_value, winner == 2 as win, first == 2 as first, 2 as hero_player, 1 as opp_player, * from matches)
+			where hero == $hero and opp == $opp and ($first is null or first == $first) and (format == $format)
+		)
+
+		select * from hero_matches m join cards c on m.id == c.match_id
+		group by m.id
+		having
+			count(distinct case when c.id in (${heroIncludeList}) and c.player == hero_player then c.id end) = ${heroInclude.length}
+			and count(distinct case when c.id not in (${heroExcludeList}) and c.player == hero_player then c.id end) = count(distinct case when c.player == hero_player then c.id end)
+			and count(distinct case when c.id in (${oppIncludeList}) and c.player == opp_player then c.id end) = ${oppInclude.length}
+			and count(distinct case when c.id not in (${oppExcludeList}) and c.player == opp_player then c.id end) = count(distinct case when c.player == opp_player then c.id end)
+	`;
+	const stmt = db.prepare(query);
+	stmt.bind({$hero: hero, $first: first, $opp: opp, $format: format});
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};
+
+export const getDecklist = (player, match_id) => {
+	const stmt = db.prepare(`
+		select * from cards where match_id == $match_id and player == $player
+	`);
+	stmt.bind({$player: player, $match_id: match_id});
 	const result = stmt.get();
 
 	let rows = [];

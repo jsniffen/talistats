@@ -54,6 +54,8 @@ const goingDropdown = going => {
 					e("input[type=checkbox][name='First'][checked]", {onchange: e => setGoing(g =>  g + (e.target.checked ? 1 : -1))}),
 					"First"
 				),
+			),
+			e("li",
 				e("label",
 					e("input[type=checkbox][name='Second'][checked]", {onchange: e => setGoing(g =>  g + (e.target.checked ? 2 : -2))}),
 					"Second"

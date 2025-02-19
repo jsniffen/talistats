@@ -4,7 +4,9 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="color-scheme" content="light dark" />
+
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple-icons/siimple-icons.css" />
 		<link rel="stylesheet" href="main.css" />
 	</head>
 	<body>
@@ -15,13 +17,15 @@
 				</ul>
 				<ul>
 					<li><a class="contrast" href="/#/heroes">Heroes</a></li>
-					<li><a class="contrast" href="/#/winrates">Winrates</a></li>
+					<li><a class="contrast" href="/#/matchup">Matchup</a></li>
 				</ul>
 			</nav>
 		</header>
 		<main class="container">
 			<div id="main"></div>
 		</main>
+		<dialog id="modal">
+		</dialog>
 	</body>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.12.0/sql-wasm.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
