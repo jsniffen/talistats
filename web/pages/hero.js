@@ -32,14 +32,14 @@ const opponentDropdown = hero => {
 	return e("details.dropdown",
 		e("summary", "Opponents"),
 		e("ul",
-			e("li",
-				...opponents.map(name => {
-					return e("label",
+			...opponents.map(name => {
+				return e("li",
+					e("label",
 						e("input[type=checkbox][checked]", {onchange: e => onchange(e, name)}),
 						name,
-					);
-				}),
-			),
+					),
+				);
+			}),
 		),
 	);
 }
