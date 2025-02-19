@@ -3,6 +3,7 @@ import {getAllWinrates} from "./db.js";
 import {homePage} from "./pages/home.js";
 import {heroPage} from "./pages/hero.js";
 import {heroesPage} from "./pages/heroes.js";
+import {cardsPage} from "./pages/cards.js";
 import {matchup} from "./pages/matchup.js";
 
 const winrates = () => {
@@ -58,6 +59,9 @@ mount("main", () => {
 		},
 		"/#/matchup": () => {
 			return matchup();
+		},
+		"/#/cards": () => {
+			return cardsPage();
 		},
 		// "/#/hero": () => {
 		// 	return heroPage();

@@ -229,3 +229,30 @@ export const getDecklist = (player, match_id) => {
 	}
 	return rows;
 };
+
+export const getCardStats = (hero, opp, first, format, orderBy, order) => {
+	const stmt = db.prepare(`
+		select sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate, * from (
+			select player == winner as win, player == first as first, case when player == 1 then p1_hero else p2_hero end as hero, case when player == 1 then p2_hero else p1_hero end as opp, c.id as card_id, * from cards c
+			join matches m on m.id == c.match_id
+		)
+		where name != "" and hero == $hero and ($opp is null or opp == $opp) and ($first is null or $first == first) and $format == format
+		group by card_id
+		order by
+		case when $orderBy == 'name' and $order == 'asc' then name end asc,
+		case when $orderBy == 'name' and $order == 'desc' then name end desc,
+		case when $orderBy == 'total' and $order == 'asc' then total end asc,
+		case when $orderBy == 'total' and $order == 'desc' then total end desc,
+		case when $orderBy == 'winrate' and $order == 'asc' then winrate end asc,
+		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc
+	`);
+	stmt.bind({$hero: hero, $opp: opp, $first: first, $format: format, $orderBy: orderBy, $order: order});
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+
+};

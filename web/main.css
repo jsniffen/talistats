@@ -152,3 +152,8 @@ i.card-delete:hover {
 a.decklist {
 	cursor: pointer;
 }
+
+td.cardrow {
+	display: flex;
+	align-items: center;
+}
