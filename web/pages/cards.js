@@ -1,5 +1,5 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
-import {getDistinctHeroes, getCardStats} from "../db.js";
+import {getOpponents, getDistinctHeroes, getCardStats} from "../db.js";
 import {round} from "../util.js";
 
 const [onHero, setHero] = state("");
@@ -56,8 +56,8 @@ const heroDropdown = () => {
 	);
 };
 
-const oppDropdown = () => {
-	const heroes = getDistinctHeroes();
+const oppDropdown = hero => {
+	const heroes = getOpponents(hero);
 
 	return e("select[name=select]", { onchange: e => setOpponent(e.target.value) },
 		e("option[value='all']", "All Opponents"),
@@ -89,6 +89,7 @@ const thOnClick = (e, by) => {
 
 export const cardsPage = () => {
 	const tbody = ref();
+	const oppDropdownElement = ref();
 
 	const html =  e("div",
 		e("h3", "Hero"),
@@ -96,7 +97,7 @@ export const cardsPage = () => {
 		e("div.grid",
 			formatDropdown(),
 			goingDropdown(),
-			oppDropdown(),
+			e("div", {oppDropdownElement}),
 		),
 		e("table",
 			e("thead",
@@ -110,6 +111,8 @@ export const cardsPage = () => {
 
 	onMany((hero, opp, going, format, order) => {
 		tbody.element.innerHTML = "";
+		oppDropdownElement.element.innerHTML = "";
+		oppDropdownElement.element.append(oppDropdown(hero));
 
 		let first = null;
 		if (going == 3) first = null;
