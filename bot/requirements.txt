@@ -5,3 +5,4 @@ py-cord
 python-dotenv
 requests
 bottle
+audioop-lts
