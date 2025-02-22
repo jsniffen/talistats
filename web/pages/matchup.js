@@ -16,6 +16,7 @@ export const matchup = () => {
 	const [onHero, setHero] = state("");
 	const [onGoing, setGoing] = state(3);
 	const [onOpponent, setOpponent] = state("");
+	const [onOpponents, setOpponents] = state(getDistinctHeroes());
 
 	const [onHeroCards, setHeroCards] = state({});
 	const [onOpponentCards, setOpponentCards] = state({});
@@ -81,12 +82,11 @@ export const matchup = () => {
 		);
 	};
 
-	const oppDropdown = (hero, opp) => {
-		const heroes = getOpponents(hero);
+	const oppDropdown = (opponent, opponents) => {
+		const options = opponents.map(hero => e("option", hero))
 
-		const options = heroes.map(hero => e("option", hero))
 		options.forEach(option => {
-			if (option.value == opp) option.selected = true
+			if (option.value == opponent) option.selected = true
 		});
 
 		return e("select[name=select]", { onchange: e => setOpponent(e.target.value) },
@@ -277,6 +277,18 @@ export const matchup = () => {
 		),
 	);
 
+	onHero(hero => {
+		const opps = getOpponents(hero);
+		setOpponents(opps);
+		setOpponent(opps[0]);
+	});
+
+	onMany((opponent, opponents) => {
+		oppDropdownElement.element.innerHTML = "";
+		oppDropdownElement.element.append(oppDropdown(opponent, opponents));
+	}, onOpponent, onOpponents);
+
+
 	onMany((hero, opponent, heroCards, opponentCards, format, going) => {
 		heroCardsIncluded.element.innerHTML = "";
 		heroCardsExcluded.element.innerHTML = "";
@@ -284,9 +296,8 @@ export const matchup = () => {
 		opponentCardsExcluded.element.innerHTML = "";
 		matchRows.element.innerHTML = "";
 		statsRows.element.innerHTML = "";
-		oppDropdownElement.element.innerHTML = "";
 
-		oppDropdownElement.element.append(oppDropdown(hero, opponent));
+		if (opponent == "") return;
 
 		const heroIncluded = [];
 		const heroExcluded = [];
