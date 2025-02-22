@@ -11,3 +11,12 @@ export const heroLink = (hero, contrast=false) => {
 export const round = winrate => {
 	return Math.round(winrate*100)/100;
 }
+
+export const localDate = date => {
+	const utcDate = new Date(date);
+
+	const localOffsetMinutes = utcDate.getTimezoneOffset();
+	const localDate = new Date(utcDate.getTime() - (localOffsetMinutes * 60 * 1000));
+
+	return localDate.toLocaleString();
+};

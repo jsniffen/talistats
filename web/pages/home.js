@@ -1,6 +1,6 @@
 import {element as e} from "../tiny.js";
 import {getMostRecentMatches} from "../db.js";
-import {heroLink} from "../util.js";
+import {localDate, heroLink} from "../util.js";
 
 const recentMatches = () => {
 	const matches = getMostRecentMatches();
@@ -19,14 +19,12 @@ const recentMatches = () => {
 				const p1_score = match.winner == 1 ? 1 : 0;
 				const p2_score = match.winner == 2 ? 1 : 0;
 
-				const date = new Date(match.date);
-
 				return e("tr",
 					e("td", heroLink(match.p1_hero)),
 					e("td", p1_score + " - " + p2_score),
 					e("td", heroLink(match.p2_hero)),
 					e("td", match.turns),
-					e("td", date.toLocaleString()),
+					e("td", localDate(match.date)),
 					e("td", match.format),
 				);
 			}),
