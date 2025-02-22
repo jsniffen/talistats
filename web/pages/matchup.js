@@ -1,6 +1,7 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
 import {getOpponents, getDecklist, getMatches, getDistinctHeroes, getCards} from "../db.js";
 import {round, heroLink} from "../util.js";
+import {decklist} from "../components/decklist.js";
 
 export const matchup = () => {
 	const heroCardsIncluded = ref();
@@ -93,18 +94,6 @@ export const matchup = () => {
 		);
 	};
 
-	const pitch = card => {
-		let pitch = "";
-		if (card.pitch == 1) {
-			pitch = e("div.pitch.pitch-1");
-		} else if (card.pitch == 2) {
-			pitch = e("div.pitch.pitch-2");
-		} else if (card.pitch == 3) {
-			pitch = e("div.pitch.pitch-3");
-		}
-		return pitch;
-	};
-
 	const cardSearchResult = card => {
 		const heroInclude = () => {
 			setHeroCards(cards => {
@@ -172,38 +161,7 @@ export const matchup = () => {
 	};
 
 	let results = ref();
-	let visibleModal = null;
-	const animationDuration = 400;
-
-	const closeModal = modal => {
-		visibleModal = null;
-		const html = document.documentElement;
-		html.classList.add("modal-is-closing");
-		setTimeout(() => {
-			html.classList.remove("modal-is-closing", "modal-is-open");
-			modal.close();
-		}, animationDuration);
-	};
-
-	const openModal = modal => {
-		const html = document.documentElement;
-		html.classList.add("modal-is-open", "modal-is-opening");
-		setTimeout(() => {
-			html.classList.remove("modal-is-opening");
-			visibleModal = modal;
-		}, animationDuration);
-		modal.showModal();
-	};
-
-	document.addEventListener("keydown", (event) => {
-		if (event.key === "Escape" && visibleModal) {
-			closeModal(visibleModal);
-		}
-	});
-
 	const documentOnClick = e => {
-		if (visibleModal && !visibleModal.querySelector("article")?.contains(e.target)) closeModal(visibleModal);
-
 		if (results.element && !results.element.contains(e.target)) results.element.hidden = true;
 	};
 	document.addEventListener("click", documentOnClick);
@@ -251,27 +209,6 @@ export const matchup = () => {
 			pitch(card),
 			e("i.card-delete.si-x", { onclick: () => deleteOpponentCard(card) }),
 		);
-	};
-
-	const decklist = (match, hero, player) => {
-		const showDecklist = () => {
-			const decklist = getDecklist(player, match.match_id);
-
-			const modal = document.getElementById("modal");
-			modal.innerHTML = "";
-			modal.append(e("article", 
-				...decklist.sort((a, b) => a.pitch - b.pitch).map(row => {
-					return e("div.card",
-						`(${row.num_copies}) `,
-						row.name,
-						pitch(row),
-					)
-				}),
-			));
-			openModal(modal);
-		};
-
-		return e("a.contrast.decklist", { onclick: showDecklist}, hero);
 	};
 
 	const html = e("div", { style: "margin-bottom: 20px" },
@@ -389,9 +326,9 @@ export const matchup = () => {
 			const p2_score = match.win ? 0 : 1;
 			const date = new Date(match.date);
 			return e("tr",
-				e("td", decklist(match, match.hero, match.hero_player)),
+				e("td", decklist(match.match_id, match.hero_player), " ", heroLink(match.hero)),
 				e("td", p1_score + " - " + p2_score),
-				e("td", decklist(match, match.opp, match.opp_player)),
+				e("td", decklist(match.match_id, match.opp_player), " ", heroLink(match.opp)),
 				e("td", match.hero_avg_value),
 				e("td", match.opp_avg_value),
 				e("td", match.first ? "1st" : "2nd"),

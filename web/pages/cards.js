@@ -1,6 +1,7 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
 import {getOpponents, getDistinctHeroes, getCardStats} from "../db.js";
 import {round} from "../util.js";
+import {pitch} from "../components/pitch.js";
 
 export const cardsPage = () => {
 	const tbody = ref();
@@ -18,18 +19,6 @@ export const cardsPage = () => {
 		return e("input[type=search][placeholder='Search for a Card']", {
 			oninput: e => setQuery(e.target.value),
 		});
-	};
-
-	const pitch = card => {
-		let pitch = "";
-		if (card.pitch == 1) {
-			pitch = e("div.pitch.pitch-1");
-		} else if (card.pitch == 2) {
-			pitch = e("div.pitch.pitch-2");
-		} else if (card.pitch == 3) {
-			pitch = e("div.pitch.pitch-3");
-		}
-		return pitch;
 	};
 
 	const mustPlaySwitch = () => {

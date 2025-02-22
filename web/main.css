@@ -149,11 +149,16 @@ i.card-delete:hover {
 	color: var(--pico-primary-inverse);
 }
 
-a.decklist {
+.decklist {
 	cursor: pointer;
 }
 
 td.cardrow {
+	display: flex;
+	align-items: center;
+}
+
+.vcenter {
 	display: flex;
 	align-items: center;
 }
