@@ -5,8 +5,14 @@ const resp = await fetch(DB_URL);
 const buf = await resp.arrayBuffer();
 const db = new sql.Database(new Uint8Array(buf));
 
-export const getMostRecentMatches = () => {
-	const stmt = db.prepare("select * from matches order by date desc");
+export const getMostRecentMatches = (hero, limit) => {
+	const stmt = db.prepare(`
+		select * from matches
+		where $hero == "" or p1_hero like concat("%", $hero, "%") or p2_hero like concat("%", $hero, "%")
+		order by date desc 
+		limit $limit
+	`);
+	stmt.bind({$hero: hero, $limit: limit});
 	const result = stmt.get();
 
 	let rows = [];

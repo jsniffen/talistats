@@ -24,7 +24,7 @@ def index():
 
     # loop.run_until_complete(db.insert_match(match))
     asyncio.run(db.insert_match(match, format))
-    return f"Added result: {match.summary()}"
+    return f"Added {format} result: {match.summary()}"
 
 def start(port=8080):
     thread.start_new_thread(run, (), {"host":"0.0.0.0", "port":port})
