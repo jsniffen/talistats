@@ -2,6 +2,9 @@ import {element as e, state, ref, onMany} from "../tiny.js";
 import {getOpponents, getDecklist, getMatches, getDistinctHeroes, getCards} from "../db.js";
 import {round, heroLink} from "../util.js";
 import {decklist} from "../components/decklist.js";
+import {heroesDropdown} from "../components/heroesDropdown.js";
+import {numberRange} from "../components/numberRange.js";
+import {pitch} from "../components/pitch.js";
 
 export const matchup = () => {
 	const heroCardsIncluded = ref();
@@ -13,10 +16,11 @@ export const matchup = () => {
 	const statsRows = ref();
 	const oppDropdownElement = ref();
 
-	const [onHero, setHero] = state("");
 	const [onGoing, setGoing] = state(3);
-	const [onOpponent, setOpponent] = state("");
-	const [onOpponents, setOpponents] = state(getDistinctHeroes());
+	const [onMinTurns, setMinTurns] = state(0);
+
+	const [onHeroes, setHeroes] = state([])
+	const [onOpponents, setOpponents] = state([]);
 
 	const [onHeroCards, setHeroCards] = state({});
 	const [onOpponentCards, setOpponentCards] = state({});
@@ -62,24 +66,6 @@ export const matchup = () => {
 			delete cards[card.id]
 			return cards;
 		});
-	};
-
-	const heroDropdown = () => {
-		const heroes = getDistinctHeroes();
-		setHero(heroes[0]);
-
-		return e("select[name=select]", { onchange: e => setHero(e.target.value) },
-			...heroes.map(hero => e("option", hero)),
-		);
-	};
-
-	const opponentDropdown = () => {
-		const heroes = getDistinctHeroes();
-		setOpponent(heroes[0]);
-
-		return e("select[name=select]", { onchange: e => setOpponent(e.target.value) },
-			...heroes.map(hero => e("option", hero)),
-		);
 	};
 
 	const oppDropdown = (opponent, opponents) => {
@@ -218,9 +204,10 @@ export const matchup = () => {
 			formatDropdown(),
 			goingDropdown(),
 		),
+		numberRange("Min Turns", setMinTurns, 0, 30),
 		e("div",
-			e("h3", "Hero"),
-			heroDropdown(),
+			e("h3", "Heroes"),
+			heroesDropdown("Heroes", setHeroes),
 			e("article.card-list",
 				e("div", 
 					e("h5", "Included"),
@@ -234,8 +221,8 @@ export const matchup = () => {
 			),
 		),
 		e("div",
-			e("h3", "Opponent"),
-			e("div", {oppDropdownElement}),
+			e("h3", "Opponents"),
+			heroesDropdown("Opponents", setOpponents),
 			e("article.card-list",
 				e("div", 
 					e("h5", "Included"),
@@ -277,27 +264,13 @@ export const matchup = () => {
 		),
 	);
 
-	onHero(hero => {
-		const opps = getOpponents(hero);
-		setOpponents(opps);
-		setOpponent(opps[0]);
-	});
-
-	onMany((opponent, opponents) => {
-		oppDropdownElement.element.innerHTML = "";
-		oppDropdownElement.element.append(oppDropdown(opponent, opponents));
-	}, onOpponent, onOpponents);
-
-
-	onMany((hero, opponent, heroCards, opponentCards, format, going) => {
+	onMany((heroes, opponents, heroCards, opponentCards, format, going, minTurns) => {
 		heroCardsIncluded.element.innerHTML = "";
 		heroCardsExcluded.element.innerHTML = "";
 		opponentCardsIncluded.element.innerHTML = "";
 		opponentCardsExcluded.element.innerHTML = "";
 		matchRows.element.innerHTML = "";
 		statsRows.element.innerHTML = "";
-
-		if (opponent == "") return;
 
 		const heroIncluded = [];
 		const heroExcluded = [];
@@ -329,7 +302,7 @@ export const matchup = () => {
 		if (going == 2) first = false;
 		if (going == 1) first = true;
 
-		const matches = getMatches(hero, heroIncluded, heroExcluded, opponent, oppIncluded, oppExcluded, format, first);
+		const matches = getMatches(heroes, heroIncluded, heroExcluded, opponents, oppIncluded, oppExcluded, format, first, minTurns);
 		if (matches.length == 0) return;
 
 		matchRows.element.append(...matches.map(match => {
@@ -357,7 +330,7 @@ export const matchup = () => {
 			e("td", round(winrate), "%"),
 		));
 
-	}, onHero, onOpponent, onHeroCards, onOpponentCards, onFormat, onGoing);
+	}, onHeroes, onOpponents, onHeroCards, onOpponentCards, onFormat, onGoing, onMinTurns);
 
 	return html;
 };

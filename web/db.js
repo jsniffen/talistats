@@ -184,20 +184,23 @@ export const getHeroGamesPlayed = () => {
 	return rows;
 };
 
-export const getMatches = (hero, heroInclude, heroExclude, opp, oppInclude, oppExclude, format, first) => {
+export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclude, oppExclude, format, first, minTurns) => {
 	const heroIncludeList = heroInclude.map(id => `'${id}'`).join(",");
 	const heroExcludeList = heroExclude.map(id => `'${id}'`).join(",");
 	const oppIncludeList = oppInclude.map(id => `'${id}'`).join(",");
 	const oppExcludeList = oppExclude.map(id => `'${id}'`).join(",");
+
+	const heroList = heroes.map(x => `'${x}'`).join(",");
+	const oppList = opponents.map(x => `'${x}'`).join(",");
+
 	const query = `
 		with hero_matches as (
 			select * from (
 			select p1_hero as hero, p2_hero as opp, p1_avg_value as hero_avg_value, p2_avg_value as opp_avg_value, winner == 1 as win, first == 1 as first, 1 as hero_player, 2 as opp_player, * from matches
 			union all
 			select p2_hero as hero, p1_hero as opp, p2_avg_value as hero_avg_value, p1_avg_value as opp_avg_value, winner == 2 as win, first == 2 as first, 2 as hero_player, 1 as opp_player, * from matches)
-			where hero == $hero and opp == $opp and ($first is null or first == $first) and (format == $format)
+			where hero in (${heroList}) and opp in (${oppList}) and ($first is null or first == $first) and format == $format and turns >= $minTurns
 		)
-
 		select * from hero_matches m join cards c on m.id == c.match_id
 		group by m.id
 		having
@@ -207,7 +210,7 @@ export const getMatches = (hero, heroInclude, heroExclude, opp, oppInclude, oppE
 			and count(distinct case when c.id not in (${oppExcludeList}) and c.player == opp_player then c.id end) = count(distinct case when c.player == opp_player then c.id end)
 	`;
 	const stmt = db.prepare(query);
-	stmt.bind({$hero: hero, $first: first, $opp: opp, $format: format});
+	stmt.bind({$first: first, $format: format, $minTurns: minTurns});
 
 	let rows = [];
 	while (stmt.step()) {
