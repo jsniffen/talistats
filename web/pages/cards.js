@@ -1,16 +1,23 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
-import {getOpponents, getDistinctHeroes, getCardStats} from "../db.js";
+import {getCardStats} from "../db.js";
+import {heroesDropdown} from "../components/heroesDropdown.js";
 import {round} from "../util.js";
 import {pitch} from "../components/pitch.js";
+import {numberRange}  from "../components/numberRange.js";
 
 export const cardsPage = () => {
 	const tbody = ref();
 	const oppDropdownElement = ref();
 
 	const [onQuery, setQuery] = state("");
-	const [onHero, setHero] = state("");
 	const [onGoing, setGoing] = state(3);
-	const [onOpponent, setOpponent] = state("all");
+
+	const [onHeroes, setHeroes] = state([])
+	const [onOpponents, setOpponents] = state([]);
+
+	const [onMinTurns, setMinTurns] = state(0);
+	const [onMinGames, setMinGames] = state(0);
+
 	const [onFormat, setFormat] = state("cc");
 	const [onOrder, setOrder] = state(["winrate", "desc"]);
 	const [onMustPlay, setMustPlay] = state(false);
@@ -57,28 +64,6 @@ export const cardsPage = () => {
 		);
 	}
 
-	const heroDropdown = () => {
-		const heroes = getDistinctHeroes();
-		setHero(heroes[0]);
-
-		return e("select[name=select]", { onchange: e => setHero(e.target.value) },
-			...heroes.map(hero => e("option", hero)),
-		);
-	};
-
-	const oppDropdown = (hero, opp) => {
-		const heroes = getOpponents(hero);
-
-		const options = [e("option[value='all']", "All Opponents"), ...heroes.map(hero => e("option", hero))]
-		options.forEach(option => {
-			if (option.value == opp) option.selected = true
-		});
-
-		return e("select[name=select]", { onchange: e => setOpponent(e.target.value) },
-			...options,
-		);
-	};
-
 	const thOnClick = (e, by) => {
 		e.classList.add("sort");
 
@@ -103,11 +88,15 @@ export const cardsPage = () => {
 
 	const html =  e("div",
 		e("h3", "Hero"),
-		heroDropdown(),
+		heroesDropdown("Heroes", setHeroes),
 		e("div.grid",
 			formatDropdown(),
 			goingDropdown(),
-			e("div", {oppDropdownElement}),
+			heroesDropdown("Opponents", setOpponents),
+		),
+		e("div.grid",
+			numberRange("Min Turns", setMinTurns, 0, 30),
+			numberRange("Min Games", setMinGames, 0, 100),
 		),
 		search(),
 		mustPlaySwitch(),
@@ -124,19 +113,15 @@ export const cardsPage = () => {
 		),
 	);
 
-	onMany((hero, opp, going, format, order, mustPlay, query) => {
+	onMany((heroes, opponents, going, format, order, mustPlay, query, minTurns, minGames) => {
 		tbody.element.innerHTML = "";
-		oppDropdownElement.element.innerHTML = "";
-		oppDropdownElement.element.append(oppDropdown(hero, opp));
 
 		let first = null;
 		if (going == 3) first = null;
 		if (going == 2) first = false;
 		if (going == 1) first = true;
 
-		if (opp == "all") opp = null;
-
-		const stats = getCardStats(query, hero, opp, first, format, order[0], order[1], mustPlay);
+		const stats = getCardStats(query, heroes, opponents, first, format, order[0], order[1], mustPlay, minTurns, minGames);
 		tbody.element.append(...stats.map(row => {
 			return e("tr",
 				e("td.cardrow", row.name, pitch(row)),
@@ -147,7 +132,7 @@ export const cardsPage = () => {
 				e("td", round(row.winrate), "%"),
 			);
 		}));
-	}, onHero, onOpponent, onGoing, onFormat, onOrder, onMustPlay, onQuery);
+	}, onHeroes, onOpponents, onGoing, onFormat, onOrder, onMustPlay, onQuery, onMinTurns, onMinGames);
 
 	return html;
 };
