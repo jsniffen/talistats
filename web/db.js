@@ -202,7 +202,7 @@ export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclu
 			where hero in (${heroList}) and opp in (${oppList}) and ($first is null or first == $first) and format == $format and turns >= $minTurns
 		)
 		select * from hero_matches m join cards c on m.id == c.match_id
-		group by m.id
+		group by m.id, first
 		having
 			count(distinct case when c.id in (${heroIncludeList}) and c.player == hero_player then c.id end) = ${heroInclude.length}
 			and count(distinct case when c.id not in (${heroExcludeList}) and c.player == hero_player then c.id end) = count(distinct case when c.player == hero_player then c.id end)
