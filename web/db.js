@@ -270,3 +270,15 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 	return rows;
 
 };
+
+export const submit = q => {
+	console.log(q);
+	const stmt = db.prepare(q);
+	const result = stmt.get();
+
+	let rows = [];
+	while (stmt.step()) {
+		rows.push(stmt.getAsObject());
+	}
+	return rows;
+};

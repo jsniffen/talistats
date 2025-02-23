@@ -5,6 +5,7 @@ import {heroPage} from "./pages/hero.js";
 import {heroesPage} from "./pages/heroes.js";
 import {cardsPage} from "./pages/cards.js";
 import {matchup} from "./pages/matchup.js";
+import {adminPage} from "./pages/adminPage.js";
 
 const winrates = () => {
 	const winrates = getAllWinrates();
@@ -63,9 +64,9 @@ mount("main", () => {
 		"/#/cards": () => {
 			return cardsPage();
 		},
-		// "/#/hero": () => {
-		// 	return heroPage();
-		// },
+		"/#/admin": () => {
+			return adminPage();
+		},
 		"/#/winrates": () => {
 			return winrates();
 		},
