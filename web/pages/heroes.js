@@ -1,6 +1,7 @@
 import {element as e, state, ref, onMany} from "../tiny.js";
 import {getAggregateWinrates} from "../db.js";
 import {heroLink, round} from "../util.js";
+import {numberRange} from "../components/numberRange.js";
 
 export const heroesPage = () => {
 	const tbody = ref();
@@ -8,6 +9,7 @@ export const heroesPage = () => {
 	const [onFormat, setFormat] = state("cc");
 	const [onQuery, setQuery] = state("");
 	const [onOrder, setOrder] = state(["hero", "asc"]);
+	const [onMinGames, setMinGames] = state(0);
 
 	const thOnClick = (e, by) => {
 		e.classList.add("sort");
@@ -40,6 +42,7 @@ export const heroesPage = () => {
 				oninput: e => setQuery(e.target.value),
 			}),
 		),
+		numberRange("Min Games", setMinGames, 0, 100),
 		e("table", 
 			e("thead",
 				e("th.sortable.sort.sort-asc", "Hero", { onclick: e => thOnClick(e.target, "hero") }),
@@ -51,8 +54,8 @@ export const heroesPage = () => {
 	);
 
 
-	onMany((format, query, order) => {
-		const winrates = getAggregateWinrates(format, order[0], order[1], query);
+	onMany((format, query, order, minGames) => {
+		const winrates = getAggregateWinrates(format, order[0], order[1], query, minGames);
 
 		tbody.element.innerHTML = "";
 
@@ -63,7 +66,7 @@ export const heroesPage = () => {
 				e("td", round(row.winrate), "%"),
 			);
 		}));
-	}, onFormat, onQuery, onOrder);
+	}, onFormat, onQuery, onOrder, onMinGames);
 
 	return html;
 };

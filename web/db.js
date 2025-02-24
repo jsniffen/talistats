@@ -72,9 +72,9 @@ export const getAggregateHeroWinrate = (hero) => {
 	return rows;
 };
 
-export const getAggregateWinrates = (format, orderBy, order, query) => {
+export const getAggregateWinrates = (format, orderBy, order, query, minGames) => {
 	const stmt = db.prepare(`
-		select hero, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
+		select * from (select hero, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
 		select p1_hero as hero, p2_hero as opp, winner == 1 as win from matches where format == $format
 		union all
 		select p2_hero as hero, p1_hero as opp, winner == 2 as win from matches where format == $format)
@@ -86,9 +86,9 @@ export const getAggregateWinrates = (format, orderBy, order, query) => {
 		case when $orderBy == 'total' and $order == 'asc' then total end asc,
 		case when $orderBy == 'total' and $order == 'desc' then total end desc,
 		case when $orderBy == 'winrate' and $order == 'asc' then winrate end asc,
-		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc
+		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc) where total >= $minGames
 	`);
-	stmt.bind({$format: format, $query: query, $orderBy: orderBy, $order: order});
+	stmt.bind({$format: format, $query: query, $orderBy: orderBy, $order: order, $minGames: minGames});
 	const result = stmt.get();
 
 	let rows = [];
