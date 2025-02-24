@@ -12,6 +12,9 @@ def index():
 
     match = talishar.get_match_stats(match_id)
 
+    if match.players[0].hero == "" or match.players[1].hero == "":
+        return f"Cannot add result {match.summary()}"
+
     if not match.is_over():
         return f"Cannot add result: {match.summary()}"
 
