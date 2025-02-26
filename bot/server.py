@@ -9,6 +9,7 @@ import asyncio
 def index():
     match_id = request.query.match_id
     format = request.query.format
+    reporter = request.query.get("player", 0)
 
     match = talishar.get_match_stats(match_id)
 
@@ -29,7 +30,7 @@ def index():
         return f"Cannot add duplicate result: {match.summary()}"
 
     # loop.run_until_complete(db.insert_match(match))
-    asyncio.run(db.insert_match(match, format))
+    asyncio.run(db.insert_match(match, format, reporter))
     return f"Added {format} result: {match.summary()}"
 
 def start(port=8080):

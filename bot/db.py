@@ -18,7 +18,7 @@ def create_tables():
                 p1_hero text, p1_avg_value real,
                 p2_hero text, p2_avg_value real,
                 format text, first integer, winner integer,
-                turns integer, date timestamp
+                turns integer, reporter integer, date timestamp
             )
         """)
 
@@ -32,15 +32,15 @@ async def insert_card(cursor, card, match_id, player):
             card.pitched, card.played, match_id, player))
 
 
-async def insert_match(match, format="cc"):
+async def insert_match(match, format="cc", reporter=0):
     p1, p2 = match.players
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.cursor()
         await cursor.execute("""insert into matches
-            (id, p1_hero, p1_avg_value, p2_hero, p2_avg_value, format, first, winner, turns, date)
-            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (id, p1_hero, p1_avg_value, p2_hero, p2_avg_value, format, first, winner, turns, reporter, date)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (match.id, p1.hero, p1.avg_value, p2.hero, p2.avg_value, format,
-                    match.first(), match.winner(), match.turns, match.date))
+                    match.first(), match.winner(), match.turns, reporter, match.date))
 
         for card in p1.cards:
             await insert_card(cursor, card, match.id, 1)
