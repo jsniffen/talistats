@@ -1,7 +1,7 @@
 import {element as e, state, ref} from "../tiny.js";
 import {getDistinctHeroes} from "../db.js";
 
-export const heroesDropdown = (placeholder,  setState) => {
+export const heroesDropdown = (placeholder, setState) => {
 	const [onAll, setAll] = state(true);
 	const options = ref();
 

@@ -53,16 +53,17 @@ export const getDistinctHeroes = () => {
 	return rows.map(row => row.hero);
 };
 
-export const getAggregateHeroWinrate = (hero) => {
+export const getAggregateHeroWinrate = (hero, mustBeReported) => {
 	const stmt = db.prepare(`
 		select hero, format, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
-		select p1_hero as hero, p2_hero as opp, winner == 1 as win, format from matches
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win, 1 as hero_player, * from matches
 		union all
-		select p2_hero as hero, p1_hero as opp, winner == 2 as win, format from matches)
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win, 2 as hero_player, * from matches)
 		where hero == $hero
+			and ($mustBeReported == false or hero_player == reporter)
 		group by hero, format
 	`);
-	stmt.bind({$hero: hero});
+	stmt.bind({$hero: hero, $mustBeReported: mustBeReported});
 	const result = stmt.get();
 
 	let rows = [];
@@ -72,13 +73,14 @@ export const getAggregateHeroWinrate = (hero) => {
 	return rows;
 };
 
-export const getAggregateWinrates = (format, orderBy, order, query, minGames) => {
+export const getAggregateWinrates = (format, orderBy, order, query, minGames, mustBeReported) => {
 	const stmt = db.prepare(`
 		select * from (select hero, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
-		select p1_hero as hero, p2_hero as opp, winner == 1 as win from matches where format == $format
-		union all
-		select p2_hero as hero, p1_hero as opp, winner == 2 as win from matches where format == $format)
-		where ($query is null or hero like concat("%", $query, "%"))
+			select p1_hero as hero, p2_hero as opp, winner == 1 as win, 1 as hero_player, * from matches where format == $format
+			union all
+			select p2_hero as hero, p1_hero as opp, winner == 2 as win, 2 as hero_player, * from matches where format == $format)
+			where ($query is null or hero like concat("%", $query, "%") and ($mustBeReported == false or reporter == hero_player)
+		) 
 		group by hero
 		order by
 		case when $orderBy == 'hero' and $order == 'asc' then hero end asc,
@@ -88,7 +90,7 @@ export const getAggregateWinrates = (format, orderBy, order, query, minGames) =>
 		case when $orderBy == 'winrate' and $order == 'asc' then winrate end asc,
 		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc) where total >= $minGames
 	`);
-	stmt.bind({$format: format, $query: query, $orderBy: orderBy, $order: order, $minGames: minGames});
+	stmt.bind({$format: format, $query: query, $orderBy: orderBy, $order: order, $minGames: minGames, $mustBeReported: mustBeReported});
 	const result = stmt.get();
 
 	let rows = [];
@@ -153,17 +155,20 @@ export const getOpponents = hero => {
 	return rows.map(r => r.opp);
 };
 
-export const getHeroWinrate = (hero, first, format) => {
+export const getHeroWinrate = (hero, first, format, mustBeReported) => {
 	const stmt = db.prepare(`
 		select hero, opp, format, sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
-		select p1_hero as hero, p2_hero as opp, winner == 1 as win, first == 1 as first, format from matches
+		select p1_hero as hero, p2_hero as opp, winner == 1 as win, first == 1 as first, 1 as hero_player, * from matches
 		union all
-		select p2_hero as hero, p1_hero as opp, winner == 2 as win, first == 2 as first, format from matches)
-		where hero == $hero and ($first is null or first == $first) and (format == $format)
+		select p2_hero as hero, p1_hero as opp, winner == 2 as win, first == 2 as first, 2 as hero_player, * from matches)
+		where hero == $hero
+			and ($first is null or first == $first)
+			and (format == $format)
+			and ($mustBeReported == false or hero_player == reporter)
 		group by hero, opp
 		order by opp
 	`);
-	stmt.bind({$hero: hero, $first: first, $format: format});
+	stmt.bind({$hero: hero, $first: first, $format: format, $mustBeReported: mustBeReported});
 	const result = stmt.get();
 
 	let rows = [];
