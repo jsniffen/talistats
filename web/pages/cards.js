@@ -4,6 +4,7 @@ import {heroesDropdown} from "../components/heroesDropdown.js";
 import {round} from "../util.js";
 import {pitch} from "../components/pitch.js";
 import {numberRange}  from "../components/numberRange.js";
+import {toggle} from "../components/toggle.js";
 
 export const cardsPage = () => {
 	const tbody = ref();
@@ -21,20 +22,12 @@ export const cardsPage = () => {
 	const [onFormat, setFormat] = state("cc");
 	const [onOrder, setOrder] = state(["winrate", "desc"]);
 	const [onMustPlay, setMustPlay] = state(false);
+	const [onMustBeReported, setMustBeReported] = state(false);
 
 	const search = () => {
 		return e("input[type=search][placeholder='Search for a Card']", {
 			oninput: e => setQuery(e.target.value),
 		});
-	};
-
-	const mustPlaySwitch = () => {
-		return e("fieldset",
-			e("label",
-				e("input[type=checkbox][role=switch]", { onchange: e => setMustPlay(e.target.checked) }),
-				"Must be Played",
-			),
-		);
 	};
 
 	const formatDropdown = hero => {
@@ -99,7 +92,8 @@ export const cardsPage = () => {
 			numberRange("Min Games", setMinGames, 0, 100),
 		),
 		search(),
-		mustPlaySwitch(),
+		toggle("Must be played", setMustPlay),
+		toggle("Internal games only", setMustBeReported),
 		e("table",
 			e("thead",
 				e("th.sortable", "Name", { onclick: e => thOnClick(e.target, "name") }),
@@ -113,7 +107,7 @@ export const cardsPage = () => {
 		),
 	);
 
-	onMany((heroes, opponents, going, format, order, mustPlay, query, minTurns, minGames) => {
+	onMany((heroes, opponents, going, format, order, mustPlay, query, minTurns, minGames, mustBeReported) => {
 		tbody.element.innerHTML = "";
 
 		let first = null;
@@ -121,7 +115,7 @@ export const cardsPage = () => {
 		if (going == 2) first = false;
 		if (going == 1) first = true;
 
-		const stats = getCardStats(query, heroes, opponents, first, format, order[0], order[1], mustPlay, minTurns, minGames);
+		const stats = getCardStats(query, heroes, opponents, first, format, order[0], order[1], mustPlay, minTurns, minGames, mustBeReported);
 		tbody.element.append(...stats.map(row => {
 			return e("tr",
 				e("td.cardrow", row.name, pitch(row)),
@@ -132,7 +126,7 @@ export const cardsPage = () => {
 				e("td", round(row.winrate), "%"),
 			);
 		}));
-	}, onHeroes, onOpponents, onGoing, onFormat, onOrder, onMustPlay, onQuery, onMinTurns, onMinGames);
+	}, onHeroes, onOpponents, onGoing, onFormat, onOrder, onMustPlay, onQuery, onMinTurns, onMinGames, onMustBeReported);
 
 	return html;
 };

@@ -190,7 +190,7 @@ export const getHeroGamesPlayed = () => {
 	return rows;
 };
 
-export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclude, oppExclude, format, first, minTurns) => {
+export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclude, oppExclude, format, first, minTurns, mustBeReported) => {
 	const heroIncludeList = heroInclude.map(id => `'${id}'`).join(",");
 	const heroExcludeList = heroExclude.map(id => `'${id}'`).join(",");
 	const oppIncludeList = oppInclude.map(id => `'${id}'`).join(",");
@@ -205,7 +205,11 @@ export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclu
 			select p1_hero as hero, p2_hero as opp, p1_avg_value as hero_avg_value, p2_avg_value as opp_avg_value, winner == 1 as win, first == 1 as first, 1 as hero_player, 2 as opp_player, * from matches
 			union all
 			select p2_hero as hero, p1_hero as opp, p2_avg_value as hero_avg_value, p1_avg_value as opp_avg_value, winner == 2 as win, first == 2 as first, 2 as hero_player, 1 as opp_player, * from matches)
-			where hero in (${heroList}) and opp in (${oppList}) and ($first is null or first == $first) and format == $format and turns >= $minTurns
+			where hero in (${heroList})
+				and opp in (${oppList})
+				and ($first is null or first == $first)
+				and format == $format and turns >= $minTurns
+				and ($mustBeReported == false or hero_player == reporter)
 		)
 		select * from hero_matches m join cards c on m.id == c.match_id
 		group by m.id, first
@@ -216,7 +220,7 @@ export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclu
 			and count(distinct case when c.id not in (${oppExcludeList}) and c.player == opp_player then c.id end) = count(distinct case when c.player == opp_player then c.id end)
 	`;
 	const stmt = db.prepare(query);
-	stmt.bind({$first: first, $format: format, $minTurns: minTurns});
+	stmt.bind({$first: first, $format: format, $minTurns: minTurns, $mustBeReported: mustBeReported});
 
 	let rows = [];
 	while (stmt.step()) {
@@ -239,7 +243,7 @@ export const getDecklist = (player, match_id) => {
 	return rows;
 };
 
-export const getCardStats = (query, heroes, opponents, first, format, orderBy, order, mustPlay, minTurns, minGames) => {
+export const getCardStats = (query, heroes, opponents, first, format, orderBy, order, mustPlay, minTurns, minGames, mustBeReported) => {
 	const heroList = heroes.map(x => `'${x}'`).join(",");
 	const oppList = opponents.map(x => `'${x}'`).join(",");
 
@@ -251,7 +255,11 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 		* from (
 			select player == winner as win, player == first as first, case when player == 1 then p1_hero else p2_hero end as hero, case when player == 1 then p2_hero else p1_hero end as opp, c.id as card_id, * from cards c
 			join matches m on m.id == c.match_id
-			where (not $mustPlay or played > 0) and ($query is null or name like concat("%", $query, "%")) and $format == format and turns >= $minTurns
+			where (not $mustPlay or played > 0)
+				and ($query is null or name like concat("%", $query, "%"))
+				and $format == format
+				and turns >= $minTurns
+				and ($mustBeReported == false or reporter == c.player)
 		)
 		where name != "" and hero in (${heroList}) and opp in (${oppList}) and ($first is null or $first == first)
 		group by card_id
@@ -269,7 +277,7 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 		case when $orderBy == 'avg_blocked' and $order == 'asc' then avg_blocked end asc,
 		case when $orderBy == 'avg_blocked' and $order == 'desc' then avg_blocked end desc) where total >= $minGames
 	`);
-	stmt.bind({$query: query, $heroes: heroes, $opponents: opponents, $first: first, $format: format, $orderBy: orderBy, $order: order, $mustPlay: mustPlay, $minTurns: minTurns, $minGames: minGames});
+	stmt.bind({$query: query, $heroes: heroes, $opponents: opponents, $first: first, $format: format, $orderBy: orderBy, $order: order, $mustPlay: mustPlay, $minTurns: minTurns, $minGames: minGames, $mustBeReported: mustBeReported});
 	const result = stmt.get();
 
 	let rows = [];

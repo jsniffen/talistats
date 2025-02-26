@@ -3,6 +3,7 @@ import {getMostRecentMatches} from "../db.js";
 import {localDate, heroLink} from "../util.js";
 import {decklist} from "../components/decklist.js";
 import {search} from "../components/search.js";
+import {reporter} from "../components/reporter.js";
 
 const recentMatches = () => {
 	const tbody = ref();
@@ -33,9 +34,9 @@ const recentMatches = () => {
 			const p2_score = match.winner == 2 ? 1 : 0;
 
 			return e("tr",
-				e("td", decklist(match.id, 1), " ", heroLink(match.p1_hero)),
+				e("td", decklist(match.id, 1), " ", heroLink(match.p1_hero), " ", reporter(match.reporter == 1)),
 				e("td", p1_score + " - " + p2_score),
-				e("td", decklist(match.id, 2), " ", heroLink(match.p2_hero)),
+				e("td", decklist(match.id, 2), " ", heroLink(match.p2_hero), " ", reporter(match.reporter == 2)),
 				e("td", match.turns),
 				e("td", localDate(match.date)),
 				e("td", match.format),

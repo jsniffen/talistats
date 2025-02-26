@@ -162,3 +162,7 @@ td.cardrow {
 	display: flex;
 	align-items: center;
 }
+
+.reporter {
+	border-bottom: 0 !important;
+}

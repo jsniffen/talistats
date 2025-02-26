@@ -5,6 +5,8 @@ import {decklist} from "../components/decklist.js";
 import {heroesDropdown} from "../components/heroesDropdown.js";
 import {numberRange} from "../components/numberRange.js";
 import {pitch} from "../components/pitch.js";
+import {toggle} from "../components/toggle.js";
+import {reporter} from "../components/reporter.js";
 
 export const matchup = () => {
 	const heroCardsIncluded = ref();
@@ -26,6 +28,7 @@ export const matchup = () => {
 	const [onOpponentCards, setOpponentCards] = state({});
 
 	const [onFormat, setFormat] = state("cc");
+	const [onMustBeReported, setMustBeReported] = state(false);
 
 	const formatDropdown = hero => {
 		return e("select[name=select]", { onchange: e => setFormat(e.target.value) },
@@ -161,7 +164,6 @@ export const matchup = () => {
 			e("article.search-results", {hidden: true, results}),
 		);
 
-
 		onQuery(q => {
 			results.element.innerHTML = "";
 			results.element.hidden = true;
@@ -205,6 +207,7 @@ export const matchup = () => {
 			goingDropdown(),
 		),
 		numberRange("Min Turns", setMinTurns, 0, 30),
+		toggle("Internal games only", setMustBeReported),
 		e("div",
 			e("h3", "Heroes"),
 			heroesDropdown("Heroes", setHeroes),
@@ -264,7 +267,7 @@ export const matchup = () => {
 		),
 	);
 
-	onMany((heroes, opponents, heroCards, opponentCards, format, going, minTurns) => {
+	onMany((heroes, opponents, heroCards, opponentCards, format, going, minTurns, mustBeReported) => {
 		heroCardsIncluded.element.innerHTML = "";
 		heroCardsExcluded.element.innerHTML = "";
 		opponentCardsIncluded.element.innerHTML = "";
@@ -302,7 +305,7 @@ export const matchup = () => {
 		if (going == 2) first = false;
 		if (going == 1) first = true;
 
-		const matches = getMatches(heroes, heroIncluded, heroExcluded, opponents, oppIncluded, oppExcluded, format, first, minTurns);
+		const matches = getMatches(heroes, heroIncluded, heroExcluded, opponents, oppIncluded, oppExcluded, format, first, minTurns, mustBeReported);
 		if (matches.length == 0) return;
 
 		matchRows.element.append(...matches.map(match => {
@@ -310,9 +313,9 @@ export const matchup = () => {
 			const p2_score = match.win ? 0 : 1;
 			const date = new Date(match.date);
 			return e("tr",
-				e("td", decklist(match.match_id, match.hero_player), " ", heroLink(match.hero)),
+				e("td", decklist(match.match_id, match.hero_player), " ", heroLink(match.hero), " ", reporter(match.reporter == match.hero_player)),
 				e("td", p1_score + " - " + p2_score),
-				e("td", decklist(match.match_id, match.opp_player), " ", heroLink(match.opp)),
+				e("td", decklist(match.match_id, match.opp_player), " ", heroLink(match.opp), " ", reporter(match.reporter == match.opp_player)),
 				e("td", match.hero_avg_value),
 				e("td", match.opp_avg_value),
 				e("td", match.first ? "1st" : "2nd"),
@@ -330,7 +333,7 @@ export const matchup = () => {
 			e("td", round(winrate), "%"),
 		));
 
-	}, onHeroes, onOpponents, onHeroCards, onOpponentCards, onFormat, onGoing, onMinTurns);
+	}, onHeroes, onOpponents, onHeroCards, onOpponentCards, onFormat, onGoing, onMinTurns, onMustBeReported);
 
 	return html;
 };
