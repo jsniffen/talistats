@@ -2,10 +2,21 @@
 	"manifest_version": 3,
 	"name": "Talistats",
 	"version": "1.0",
+	"action": {
+		"default_popup": "popup.html"
+	},
+	"background": {
+		"service_worker": "service_worker.js",
+		"type": "module"
+	},
 	"content_scripts": [
 		{
 			"js": [
-				"main.js"
+				"content_script.js"
+			],
+			"css": [
+				"pico.conditional.min.css",
+				"content_script.css"
 			],
 			"matches": [
 				"https://talishar.net/*"
@@ -13,5 +24,13 @@
 		}
 	],
 	"options_page": "options.html",
-	"permissions": ["activeTab", "storage", "nativeMessaging"]
+	"permissions": [
+		"activeTab",
+		"storage",
+		"tabs",
+		"webRequest"
+	],
+	"host_permissions": [
+		"*://*.talishar.net/*"
+	]
 }
