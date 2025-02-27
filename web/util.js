@@ -20,3 +20,7 @@ export const localDate = date => {
 
 	return localDate.toLocaleString();
 };
+
+export const listToSqlSet = list => {
+	return list.map(x => x.replaceAll("'", "''")).map(x => `'${x}'`).join(",");
+};
