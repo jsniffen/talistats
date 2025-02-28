@@ -50,11 +50,11 @@ async def insert_match(match, format="cc", reporter=0):
 
         await db.commit()
 
-async def match_exists(match):
+async def get_duplicate_match(match):
     p1, p2 = match.players
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute("""
-                select * from matches
+                select id, reporter from matches
                 where p1_hero == ?
                 and p1_avg_value == ?
                 and p2_hero == ?
@@ -66,8 +66,14 @@ async def match_exists(match):
             """, (p1.hero, p1.avg_value, p2.hero, p2.avg_value,
                 match.first(), match.winner(), match.turns, match.date)) as cursor:
             async for row in cursor:
-                return True
-        return False
+                return row[0], row[1]
+        return None, None
+
+async def update_match_reporter(id, reporter):
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.cursor()
+        await cursor.execute("update matches set reporter = ? where id = ?", (reporter, id))
+        await db.commit()
 
 async def distinct_heroes(ctx):
     query = """

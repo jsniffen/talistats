@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 import requests
 import uuid
@@ -39,7 +39,7 @@ class Match:
         id = str(uuid.uuid4())
 
         turns = p1["turns"]
-        date = datetime.now()
+        date = datetime.now(timezone.utc)
 
         players = []
         for p in [p1, p2]:
