@@ -34,9 +34,9 @@ const recentMatches = () => {
 			const p2_score = match.winner == 2 ? 1 : 0;
 
 			return e("tr",
-				e("td", decklist(match.id, 1), " ", heroLink(match.p1_hero), " ", reporter(match.reporter == 1)),
+				e("td", decklist(match.id, 1), " ", heroLink(match.p1_hero), " ", reporter(match.reporter == 1 || match.reporter == 3)),
 				e("td", p1_score + " - " + p2_score),
-				e("td", decklist(match.id, 2), " ", heroLink(match.p2_hero), " ", reporter(match.reporter == 2)),
+				e("td", decklist(match.id, 2), " ", heroLink(match.p2_hero), " ", reporter(match.reporter == 2 || match.reporter == 3)),
 				e("td", match.turns),
 				e("td", localDate(match.date)),
 				e("td", match.format),

@@ -313,9 +313,9 @@ export const matchup = () => {
 			const p2_score = match.win ? 0 : 1;
 			const date = new Date(match.date);
 			return e("tr",
-				e("td", decklist(match.match_id, match.hero_player), " ", heroLink(match.hero), " ", reporter(match.reporter == match.hero_player)),
+				e("td", decklist(match.match_id, match.hero_player), " ", heroLink(match.hero), " ", reporter(match.reporter == match.hero_player || match.reporter == 3)),
 				e("td", p1_score + " - " + p2_score),
-				e("td", decklist(match.match_id, match.opp_player), " ", heroLink(match.opp), " ", reporter(match.reporter == match.opp_player)),
+				e("td", decklist(match.match_id, match.opp_player), " ", heroLink(match.opp), " ", reporter(match.reporter == match.opp_player || match.reporter == 3)),
 				e("td", match.hero_avg_value),
 				e("td", match.opp_avg_value),
 				e("td", match.first ? "1st" : "2nd"),

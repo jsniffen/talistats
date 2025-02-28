@@ -61,7 +61,7 @@ export const getAggregateHeroWinrate = (hero, mustBeReported) => {
 		union all
 		select p2_hero as hero, p1_hero as opp, winner == 2 as win, 2 as hero_player, * from matches)
 		where hero == $hero
-			and ($mustBeReported == false or hero_player == reporter)
+			and ($mustBeReported == false or hero_player == reporter or reporter == 3)
 		group by hero, format
 	`);
 	stmt.bind({$hero: hero, $mustBeReported: mustBeReported});
@@ -80,7 +80,7 @@ export const getAggregateWinrates = (format, orderBy, order, query, minGames, mu
 			select p1_hero as hero, p2_hero as opp, winner == 1 as win, 1 as hero_player, * from matches where format == $format
 			union all
 			select p2_hero as hero, p1_hero as opp, winner == 2 as win, 2 as hero_player, * from matches where format == $format)
-			where ($query is null or hero like concat("%", $query, "%") and ($mustBeReported == false or reporter == hero_player)
+			where ($query is null or hero like concat("%", $query, "%") and ($mustBeReported == false or reporter == hero_player or reporter == 3)
 		) 
 		group by hero
 		order by
@@ -165,7 +165,7 @@ export const getHeroWinrate = (hero, first, format, mustBeReported) => {
 		where hero == $hero
 			and ($first is null or first == $first)
 			and (format == $format)
-			and ($mustBeReported == false or hero_player == reporter)
+			and ($mustBeReported == false or hero_player == reporter or reporter == 3)
 		group by hero, opp
 		order by opp
 	`);
@@ -215,7 +215,7 @@ export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclu
 				and opp in (${oppList})
 				and ($first is null or first == $first)
 				and format == $format and turns >= $minTurns
-				and ($mustBeReported == false or hero_player == reporter)
+				and ($mustBeReported == false or hero_player == reporter or reporter == 3)
 		)
 		select * from hero_matches m join cards c on m.id == c.match_id
 		group by m.id, first
@@ -264,7 +264,7 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 				and ($query is null or name like concat("%", $query, "%"))
 				and $format == format
 				and turns >= $minTurns
-				and ($mustBeReported == false or reporter == c.player)
+				and ($mustBeReported == false or reporter == c.player or reporter == 3)
 		)
 		where name != "" and hero in (${heroList}) and opp in (${oppList}) and ($first is null or $first == first)
 		group by card_id
