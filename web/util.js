@@ -14,11 +14,7 @@ export const round = winrate => {
 
 export const localDate = date => {
 	const utcDate = new Date(date);
-
-	const localOffsetMinutes = utcDate.getTimezoneOffset();
-	const localDate = new Date(utcDate.getTime() - (localOffsetMinutes * 60 * 1000));
-
-	return localDate.toLocaleString();
+	return utcDate.toLocaleString();
 };
 
 export const listToSqlSet = list => {
