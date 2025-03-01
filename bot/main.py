@@ -19,17 +19,37 @@ async def on_ready():
         storage.upload_db.start()
 
 @bot.command()
-async def winrate(ctx, hero: discord.Option(str, autocomplete=db.distinct_heroes)):
+async def report(ctx, match_id: discord.Option(str), format: discord.Option(str, default="cc", choices=formats)):
     try:
-        winrates = await db.winrates(hero)
+        match_id = match_id if match_id.isnumeric() else match_id.split("/")[-1]
 
-        lines = [f"{x['hero']} vs. {x['opponent']}: {x['winrate']:.0f}%" for x in winrates]
-        await ctx.respond("\n".join(lines))
-        print(f"Successfully handled winrate: hero={hero}")
-    except:
-        print(f"Failed to handle winrate: hero={hero}")
+        match = talishar.get_match_stats(match_id)
+
+        if match.players[0].hero == "":
+            await ctx.respond(f"Cannot add result: Hero 1 is invalid")
+            return
+
+        if match.players[1].hero == "":
+            await ctx.respond(f"Cannot add result: Hero 2 is invalid")
+            return
+
+        if not match.is_over():
+            await ctx.respond(f"Cannot add result: {match.summary()}")
+            return
+
+        duplicate_match_id, _ = await db.get_duplicate_match(match)
+        if duplicate_match_id is not None:
+            await ctx.respond(f"Cannot add duplicate result: {match.summary()}")
+            return
+
+        await db.insert_match(match)
+        await ctx.respond(f"Added result: {match.summary()}")
+
+        print(f"Successfully handled report: match_id={match_id} format={format}")
+    except Exception:
+        print(f"Failed to handle report: match_id={match_id} format={format}")
         print(traceback.format_exc())
-        await ctx.respond(f"Error calculating winrate for {hero}")
+        await ctx.respond("Error retrieving results from talishar")
 
 if __name__ == "__main__":
     try:
