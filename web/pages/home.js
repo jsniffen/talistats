@@ -4,11 +4,15 @@ import {localDate, heroLink} from "../util.js";
 import {decklist} from "../components/decklist.js";
 import {search} from "../components/search.js";
 import {reporter} from "../components/reporter.js";
+import {scroll} from "../components/scroll.js";
 
 const recentMatches = () => {
 	const tbody = ref();
 
 	const [onQuery, setQuery] = state("");
+	const [onScroll, setScroll] = scroll;
+
+	let matches = [];
 
 	const html = e("div",
 		search("Search for a hero", setQuery),
@@ -25,11 +29,13 @@ const recentMatches = () => {
 		),
 	);
 
-	onQuery(query => {
-		tbody.element.innerHTML = "";
+	onScroll(scroll => {
+		const page = 50;
 
-		const matches = getMostRecentMatches(query, 20);
-		tbody.element.append(...matches.map(match => {
+		const start = (scroll-1)*50
+		const end = scroll*50;
+
+		tbody.element.append(...matches.slice(start, end).map(match => {
 			const p1_score = match.winner == 1 ? 1 : 0;
 			const p2_score = match.winner == 2 ? 1 : 0;
 
@@ -42,6 +48,12 @@ const recentMatches = () => {
 				e("td", match.format),
 			);
 		}));
+	});
+
+	onQuery(query => {
+		tbody.element.innerHTML = "";
+		matches = getMostRecentMatches(query);
+		setScroll(1);
 	});
 
 	return html;

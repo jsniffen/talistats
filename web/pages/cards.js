@@ -5,6 +5,7 @@ import {round} from "../util.js";
 import {pitch} from "../components/pitch.js";
 import {numberRange}  from "../components/numberRange.js";
 import {toggle} from "../components/toggle.js";
+import {scroll} from "../components/scroll.js";
 
 export const cardsPage = () => {
 	const tbody = ref();
@@ -23,6 +24,10 @@ export const cardsPage = () => {
 	const [onOrder, setOrder] = state(["winrate", "desc"]);
 	const [onMustPlay, setMustPlay] = state(false);
 	const [onMustBeReported, setMustBeReported] = state(false);
+
+	const [onScroll, setScroll] = scroll;
+
+	let stats = [];
 
 	const search = () => {
 		return e("input[type=search][placeholder='Search for a Card']", {
@@ -107,16 +112,12 @@ export const cardsPage = () => {
 		),
 	);
 
-	onMany((heroes, opponents, going, format, order, mustPlay, query, minTurns, minGames, mustBeReported) => {
-		tbody.element.innerHTML = "";
+	onScroll(scroll => {
+		const page = 50;
+		const start = (scroll-1)*50
+		const end = scroll*50;
 
-		let first = null;
-		if (going == 3) first = null;
-		if (going == 2) first = false;
-		if (going == 1) first = true;
-
-		const stats = getCardStats(query, heroes, opponents, first, format, order[0], order[1], mustPlay, minTurns, minGames, mustBeReported);
-		tbody.element.append(...stats.map(row => {
+		tbody.element.append(...stats.slice(start, end).map(row => {
 			return e("tr",
 				e("td.cardrow", row.name, pitch(row)),
 				e("td", row.total),
@@ -126,6 +127,18 @@ export const cardsPage = () => {
 				e("td", round(row.winrate), "%"),
 			);
 		}));
+	});
+
+	onMany((heroes, opponents, going, format, order, mustPlay, query, minTurns, minGames, mustBeReported) => {
+		tbody.element.innerHTML = "";
+
+		let first = null;
+		if (going == 3) first = null;
+		if (going == 2) first = false;
+		if (going == 1) first = true;
+
+		stats = getCardStats(query, heroes, opponents, first, format, order[0], order[1], mustPlay, minTurns, minGames, mustBeReported);
+		setScroll(1);
 	}, onHeroes, onOpponents, onGoing, onFormat, onOrder, onMustPlay, onQuery, onMinTurns, onMinGames, onMustBeReported);
 
 	return html;

@@ -69,6 +69,7 @@ input.search {
 	position: absolute;
 	margin-top: 3px;
 	padding: 0;
+	z-index: 1000;
 }
 
 div.card-search-result {

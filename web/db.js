@@ -6,14 +6,13 @@ const resp = await fetch(DB_URL);
 const buf = await resp.arrayBuffer();
 const db = new sql.Database(new Uint8Array(buf));
 
-export const getMostRecentMatches = (hero, limit) => {
+export const getMostRecentMatches = (hero) => {
 	const stmt = db.prepare(`
 		select * from matches
 		where $hero == "" or p1_hero like concat("%", $hero, "%") or p2_hero like concat("%", $hero, "%")
 		order by date desc 
-		limit $limit
 	`);
-	stmt.bind({$hero: hero, $limit: limit});
+	stmt.bind({$hero: hero});
 	const result = stmt.get();
 
 	let rows = [];
@@ -224,6 +223,7 @@ export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclu
 			and count(distinct case when c.id not in (${heroExcludeList}) and c.player == hero_player then c.id end) = count(distinct case when c.player == hero_player then c.id end)
 			and count(distinct case when c.id in (${oppIncludeList}) and c.player == opp_player then c.id end) = ${oppInclude.length}
 			and count(distinct case when c.id not in (${oppExcludeList}) and c.player == opp_player then c.id end) = count(distinct case when c.player == opp_player then c.id end)
+		order by date desc
 	`);
 	stmt.bind({$first: first, $format: format, $minTurns: minTurns, $mustBeReported: mustBeReported});
 
