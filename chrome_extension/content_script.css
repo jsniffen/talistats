@@ -11,13 +11,13 @@
 div.talistats-popup {
 	position: absolute;
 	top: 0;
-	right: 0;
+	left: 0;
 	z-index: 1000;
 	background-color: var(--pico-background-color);
 	padding: 20px;
 	border-radius: 20px;
 	margin: 20px;
-	width: 500px;
+	width: 350px;
     animation: 1s linear fadein;
 	transition: opacity 1s;
 }
