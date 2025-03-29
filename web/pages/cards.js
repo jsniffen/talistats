@@ -108,6 +108,7 @@ export const cardsPage = () => {
 				e("th.sortable", "Avg Pitched", { onclick: e => thOnClick(e.target, "avg_pitched") }),
 				e("th.sortable.sort.sort-desc", "Winrate", { onclick: e => thOnClick(e.target, "winrate") }),
 				e("th.sortable", "Inverse Winrate", { onclick: e => thOnClick(e.target, "inv_winrate") }),
+				e("th.sortable", "Differential", { onclick: e => thOnClick(e.target, "diff") }),
 			),
 			e("tbody", { tbody }),
 		),
@@ -119,6 +120,11 @@ export const cardsPage = () => {
 		const end = scroll*50;
 
 		tbody.element.append(...stats.slice(start, end).map(row => {
+			let diff = round(row.diff) + "%";
+			if (row.diff > 0) {
+				diff = "+" + diff;
+			}
+
 			return e("tr",
 				e("td.cardrow", row.name, pitch(row)),
 				e("td", row.total),
@@ -127,6 +133,7 @@ export const cardsPage = () => {
 				e("td", round(row.avg_pitched)),
 				e("td", round(row.winrate), "%"),
 				e("td", row.inv_total > 0 ? round(row.inv_winrate)+"% ("+row.inv_total+")" : ""),
+				e("td", row.inv_total > 0 ? diff : ""),
 			);
 		}));
 	});

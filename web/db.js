@@ -272,6 +272,7 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 		(cast(sum(blocked) as float)/count(*)) as avg_blocked, sum(blocked) as total_blocked,
 		(total_games - count(*)) inv_total,
 		(cast((total_wins - sum(win)) as float)/(total_games - count(*)))*100 as inv_winrate,
+		((((cast(sum(win) as float)/count(*))*100)) - ((cast((total_wins - sum(win)) as float)/(total_games - count(*)))*100)) as diff,
 		* from (
 			select player == winner as win, player == first as first, case when player == 1 then p1_hero else p2_hero end as hero, case when player == 1 then p2_hero else p1_hero end as opp, c.id as card_id, * from cards c
 			join matches m on m.id == c.match_id
@@ -297,6 +298,8 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 		case when $orderBy == 'avg_pitched' and $order == 'desc' then avg_pitched end desc,
 		case when $orderBy == 'avg_blocked' and $order == 'asc' then avg_blocked end asc,
 		case when $orderBy == 'avg_blocked' and $order == 'desc' then avg_blocked end desc,
+		case when $orderBy == 'diff' and $order == 'asc' then diff end asc,
+		case when $orderBy == 'diff' and $order == 'desc' then diff end desc,
 		case when $orderBy == 'inv_winrate' and $order == 'asc' then inv_winrate end asc,
 		case when $orderBy == 'inv_winrate' and $order == 'desc' then inv_winrate end desc) where total >= $minGames
 	`);
