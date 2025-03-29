@@ -17,6 +17,7 @@ export const matchup = () => {
 
 	const matchRows = ref();
 	const statsRows = ref();
+	const winrateDiv = ref();
 	const oppDropdownElement = ref();
 
 	const [onGoing, setGoing] = state(3);
@@ -203,6 +204,39 @@ export const matchup = () => {
 		);
 	};
 
+	const winrateComponent = matches => {
+		console.log(matches);
+
+		const data = {};
+
+		for (const match of matches) {
+			const opp = match.opp
+
+			if (opp in data) {
+				data[opp].wins += match.win;
+				data[opp].total += 1;
+			} else {
+				data[opp] = {
+					wins: match.win,
+					total: 1,
+				}
+			}
+		}
+
+		return e("div", 
+			...Object.keys(data).sort().map(opp => {
+				const wins = data[opp].wins;
+				const total = data[opp].total;
+				const winrate = (wins/total)*100;
+				return e("div",
+					heroLink(opp, true),
+					e("progress.progress-bar", {value: winrate, max: 100}),
+					e("span.progress-bar-text", `${Math.round(winrate*100)/100}% (${wins}/${total})`),
+				);
+			}),
+		);
+	};
+
 	const html = e("div", { style: "margin-bottom: 20px" },
 		e("h3", "Filters"),
 		cardSearch(),
@@ -251,6 +285,10 @@ export const matchup = () => {
 				),
 				e("tbody", {statsRows}),
 			),
+		),
+		e("div",
+			e("h3", "Winrates"),
+			e("div", {ref: winrateDiv}),
 		),
 		e("div",
 			e("h3", "Matches"),
@@ -302,6 +340,7 @@ export const matchup = () => {
 		opponentCardsExcluded.element.innerHTML = "";
 		matchRows.element.innerHTML = "";
 		statsRows.element.innerHTML = "";
+		winrateDiv.element.innerHTML = "";
 
 		const heroIncluded = [];
 		const heroExcluded = [];
@@ -345,6 +384,8 @@ export const matchup = () => {
 			e("td", total),
 			e("td", round(winrate), "%"),
 		));
+
+		winrateDiv.element.append(winrateComponent(matches));
 	}, onHeroes, onOpponents, onHeroCards, onOpponentCards, onFormat, onGoing, onMinTurns, onMustBeReported);
 
 	return html;

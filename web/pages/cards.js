@@ -107,6 +107,7 @@ export const cardsPage = () => {
 				e("th.sortable", "Avg Blocked", { onclick: e => thOnClick(e.target, "avg_blocked") }),
 				e("th.sortable", "Avg Pitched", { onclick: e => thOnClick(e.target, "avg_pitched") }),
 				e("th.sortable.sort.sort-desc", "Winrate", { onclick: e => thOnClick(e.target, "winrate") }),
+				e("th.sortable", "Inverse Winrate", { onclick: e => thOnClick(e.target, "inv_winrate") }),
 			),
 			e("tbody", { tbody }),
 		),
@@ -125,6 +126,7 @@ export const cardsPage = () => {
 				e("td", round(row.avg_blocked)),
 				e("td", round(row.avg_pitched)),
 				e("td", round(row.winrate), "%"),
+				e("td", row.inv_total > 0 ? round(row.inv_winrate)+"% ("+row.inv_total+")" : ""),
 			);
 		}));
 	});

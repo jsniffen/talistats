@@ -253,13 +253,29 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 	const oppList = listToSqlSet(opponents);
 
 	const stmt = db.prepare(`
+		with total_stats as (
+			select sum(win) as total_wins, count(*) as total_games from (
+				select p1_hero as hero, p2_hero as opp, winner == 1 as win, first == 1 as first, 1 as hero_player, * from matches
+				union all
+				select p2_hero as hero, p1_hero as opp, winner == 2 as win, first == 2 as first, 2 as hero_player, * from matches
+			)
+			where $format == format
+			and turns >= $minTurns
+			and ($mustBeReported == false or reporter == hero_player or reporter == 3)
+			and hero in (${heroList}) and opp in (${oppList})
+			and ($first is null or $first == first)
+		)
+
 		select * from (select sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate,
 		(cast(sum(played) as float)/count(*)) as avg_played, sum(played) as total_played,
 		(cast(sum(pitched) as float)/count(*)) as avg_pitched, sum(pitched) as total_pitched,
 		(cast(sum(blocked) as float)/count(*)) as avg_blocked, sum(blocked) as total_blocked,
+		(total_games - count(*)) inv_total,
+		(cast((total_wins - sum(win)) as float)/(total_games - count(*)))*100 as inv_winrate,
 		* from (
 			select player == winner as win, player == first as first, case when player == 1 then p1_hero else p2_hero end as hero, case when player == 1 then p2_hero else p1_hero end as opp, c.id as card_id, * from cards c
 			join matches m on m.id == c.match_id
+			join total_stats ts
 			where (not $mustPlay or played > 0)
 				and ($query is null or name like concat("%", $query, "%"))
 				and $format == format
@@ -280,7 +296,9 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 		case when $orderBy == 'avg_pitched' and $order == 'asc' then avg_pitched end asc,
 		case when $orderBy == 'avg_pitched' and $order == 'desc' then avg_pitched end desc,
 		case when $orderBy == 'avg_blocked' and $order == 'asc' then avg_blocked end asc,
-		case when $orderBy == 'avg_blocked' and $order == 'desc' then avg_blocked end desc) where total >= $minGames
+		case when $orderBy == 'avg_blocked' and $order == 'desc' then avg_blocked end desc,
+		case when $orderBy == 'inv_winrate' and $order == 'asc' then inv_winrate end asc,
+		case when $orderBy == 'inv_winrate' and $order == 'desc' then inv_winrate end desc) where total >= $minGames
 	`);
 	stmt.bind({$query: query, $heroes: heroes, $opponents: opponents, $first: first, $format: format, $orderBy: orderBy, $order: order, $mustPlay: mustPlay, $minTurns: minTurns, $minGames: minGames, $mustBeReported: mustBeReported});
 	const result = stmt.get();
