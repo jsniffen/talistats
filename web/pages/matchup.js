@@ -7,7 +7,6 @@ import {numberRange} from "../components/numberRange.js";
 import {pitch} from "../components/pitch.js";
 import {toggle} from "../components/toggle.js";
 import {reporter} from "../components/reporter.js";
-import {scroll} from "../components/scroll.js";
 
 export const matchup = () => {
 	const heroCardsIncluded = ref();
@@ -15,7 +14,6 @@ export const matchup = () => {
 	const opponentCardsIncluded = ref();
 	const opponentCardsExcluded = ref();
 
-	const matchRows = ref();
 	const statsRows = ref();
 	const winrateDiv = ref();
 	const oppDropdownElement = ref();
@@ -31,7 +29,6 @@ export const matchup = () => {
 
 	const [onFormat, setFormat] = state("cc");
 	const [onMustBeReported, setMustBeReported] = state(false);
-	const [onScroll, setScroll] = scroll;
 
 	let matches = [];
 
@@ -204,9 +201,43 @@ export const matchup = () => {
 		);
 	};
 
-	const winrateComponent = matches => {
-		console.log(matches);
+	const matchesTable = (opp, matches) => {
+		return e("div",
+			e("table",
+				e("thead",
+					e("th", "Hero"),
+					e("th", "Result"),
+					e("th", "Opponent"),
+					e("th", "Hero Avg Value"),
+					e("th", "Opp Avg Value"),
+					e("th", "Going"),
+					e("th", "# Turns"),
+					e("th", "Date"),
+					e("th", "Format"),
+				),
+				e("tbody",
+					...matches.filter(match => match.opp == opp).map(match => {
+						const p1_score = match.win ? 1 : 0;
+						const p2_score = match.win ? 0 : 1;
+						const date = new Date(match.date);
+						return e("tr",
+							e("td", decklist(match.match_id, match.hero_player), " ", heroLink(match.hero), " ", reporter(match.reporter == match.hero_player || match.reporter == 3)),
+							e("td", p1_score + " - " + p2_score),
+							e("td", decklist(match.match_id, match.opp_player), " ", heroLink(match.opp), " ", reporter(match.reporter == match.opp_player || match.reporter == 3)),
+							e("td", match.hero_avg_value),
+							e("td", match.opp_avg_value),
+							e("td", match.first ? "1st" : "2nd"),
+							e("td", match.turns),
+							e("td", date.toLocaleDateString('en-US', {month: 'numeric', day: 'numeric', year: 'numeric'})),
+							e("td", match.format),
+						);
+					}),
+				),
+			),
+		);
+	};
 
+	const winrateComponent = matches => {
 		const data = {};
 
 		for (const match of matches) {
@@ -225,13 +256,30 @@ export const matchup = () => {
 
 		return e("div", 
 			...Object.keys(data).sort().map(opp => {
+				const matchesRef = ref();
+				let showMatches = false;
+
 				const wins = data[opp].wins;
 				const total = data[opp].total;
 				const winrate = (wins/total)*100;
 				return e("div",
-					heroLink(opp, true),
+					e("a.contrast.matchup-show", opp, {
+						onclick: e => {
+							showMatches = !showMatches;
+							if (showMatches) {
+								e.target.classList.add("matchup-showing");
+								matchesRef.element.style.display = "";
+							} else {
+								e.target.classList.remove("matchup-showing");
+								matchesRef.element.style.display = "none";
+							}
+						},
+					}),
 					e("progress.progress-bar", {value: winrate, max: 100}),
 					e("span.progress-bar-text", `${Math.round(winrate*100)/100}% (${wins}/${total})`),
+					e("div.matchups", { matchesRef, style: "display: none" },
+						matchesTable(opp, matches),
+					),
 				);
 			}),
 		);
@@ -289,56 +337,14 @@ export const matchup = () => {
 		e("div",
 			e("h3", "Winrates"),
 			e("div", {ref: winrateDiv}),
-		),
-		e("div",
-			e("h3", "Matches"),
-			e("table",
-				e("thead",
-					e("th", "Hero"),
-					e("th", "Result"),
-					e("th", "Opponent"),
-					e("th", "Hero Avg Value"),
-					e("th", "Opp Avg Value"),
-					e("th", "Going"),
-					e("th", "# Turns"),
-					e("th", "Date"),
-					e("th", "Format"),
-				),
-				e("tbody", {matchRows}),
-			),
-		),
+		)
 	);
-
-	onScroll(scroll => {
-		const page = 50;
-
-		const start = (scroll-1)*50
-		const end = scroll*50;
-
-		matchRows.element.append(...matches.slice(start, end).map(match => {
-			const p1_score = match.win ? 1 : 0;
-			const p2_score = match.win ? 0 : 1;
-			const date = new Date(match.date);
-			return e("tr",
-				e("td", decklist(match.match_id, match.hero_player), " ", heroLink(match.hero), " ", reporter(match.reporter == match.hero_player || match.reporter == 3)),
-				e("td", p1_score + " - " + p2_score),
-				e("td", decklist(match.match_id, match.opp_player), " ", heroLink(match.opp), " ", reporter(match.reporter == match.opp_player || match.reporter == 3)),
-				e("td", match.hero_avg_value),
-				e("td", match.opp_avg_value),
-				e("td", match.first ? "1st" : "2nd"),
-				e("td", match.turns),
-				e("td", date.toLocaleDateString('en-US', {month: 'numeric', day: 'numeric', year: 'numeric'})),
-				e("td", match.format),
-			);
-		}));
-	});
 
 	onMany((heroes, opponents, heroCards, opponentCards, format, going, minTurns, mustBeReported) => {
 		heroCardsIncluded.element.innerHTML = "";
 		heroCardsExcluded.element.innerHTML = "";
 		opponentCardsIncluded.element.innerHTML = "";
 		opponentCardsExcluded.element.innerHTML = "";
-		matchRows.element.innerHTML = "";
 		statsRows.element.innerHTML = "";
 		winrateDiv.element.innerHTML = "";
 
@@ -373,7 +379,6 @@ export const matchup = () => {
 		if (going == 1) first = true;
 
 		matches = getMatches(heroes, heroIncluded, heroExcluded, opponents, oppIncluded, oppExcluded, format, first, minTurns, mustBeReported);
-		setScroll(1);
 
 		if (matches.length == 0) return;
 

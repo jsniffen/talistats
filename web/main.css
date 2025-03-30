@@ -167,3 +167,25 @@ td.cardrow {
 .reporter {
 	border-bottom: 0 !important;
 }
+
+.matchup-show {
+	cursor: pointer;
+}
+
+a.matchup-show::after {
+	display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin-inline-start: calc(var(--pico-spacing, 1rem)* .5);
+    transform: rotate(-90deg);
+    background-image: var(--pico-icon-chevron);
+    background-position: right center;
+    background-size: 1rem auto;
+    background-repeat: no-repeat;
+    content: "";
+    transition: transform var(--pico-transition);
+}
+
+a.matchup-show.matchup-showing::after {
+    transform: rotate(0);
+}
