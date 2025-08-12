@@ -3,6 +3,7 @@ import {getOpponents, getFormats, getAggregateHeroWinrate, getHeroWinrate, getDi
 import {round, heroLink} from "../util.js";
 import {toggle} from "../components/toggle.js";
 import {heroesDropdown} from "../components/heroesDropdown.js";
+import {date} from "../components/date.js";
 
 export const heroPage = hero => {
 	const winrateDiv = ref();
@@ -12,6 +13,8 @@ export const heroPage = hero => {
 	const [onGoing, setGoing] = state(3);
 	const [onFormat, setFormat] = state("");
 	const [onMustBeReported, setMustBeReported] = state(false);
+	const [onStartDate, setStartDate] = state("");
+	const [onEndDate, setEndDate] = state("");
 
 	const formatDropdown = hero => {
 		const formats = getFormats(hero);
@@ -55,8 +58,8 @@ export const heroPage = hero => {
 		);
 	};
 
-	const statistics = (hero, mustBeReported) => {
-		const winrates = getAggregateHeroWinrate(hero, mustBeReported);
+	const statistics = (hero, mustBeReported, startDate, endDate) => {
+		const winrates = getAggregateHeroWinrate(hero, mustBeReported, startDate, endDate);
 		return e("table",
 			e("thead",
 				e("th", "Format"),
@@ -85,24 +88,28 @@ export const heroPage = hero => {
 			goingDropdown(),
 			formatDropdown(hero),
 		),
+		e("div.grid",
+			date("Start Date", setStartDate),
+			date("End Date", setEndDate),
+		),
 		toggle("Internal games only", setMustBeReported),
 		e("div", {ref: winrateDiv}),
 	);
 
-	onMany((formats, opponents, going, mustBeReported) => {
+	onMany((formats, opponents, going, mustBeReported, startDate, endDate) => {
 		winrateDiv.element.innerHTML = "";
 		statsDiv.element.innerHTML = "";
 
-		statsDiv.element.append(statistics(hero, mustBeReported));
+		statsDiv.element.append(statistics(hero, mustBeReported, startDate, endDate));
 
 		let first = null;
 		if (going == 3) first = null;
 		if (going == 2) first = false;
 		if (going == 1) first = true;
 
-		const winrate = getHeroWinrate(hero, first, formats, mustBeReported);
+		const winrate = getHeroWinrate(hero, first, formats, mustBeReported, startDate, endDate);
 		winrateDiv.element.append(heroWinrate(winrate, opponents));
-	}, onFormat, onOpponents, onGoing, onMustBeReported);
+	}, onFormat, onOpponents, onGoing, onMustBeReported, onStartDate, onEndDate);
 
 
 	return html;

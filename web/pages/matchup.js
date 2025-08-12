@@ -7,6 +7,7 @@ import {numberRange} from "../components/numberRange.js";
 import {pitch} from "../components/pitch.js";
 import {toggle} from "../components/toggle.js";
 import {reporter} from "../components/reporter.js";
+import {date} from "../components/date.js";
 
 export const matchup = () => {
 	const heroCardsIncluded = ref();
@@ -29,6 +30,9 @@ export const matchup = () => {
 
 	const [onFormat, setFormat] = state("cc");
 	const [onMustBeReported, setMustBeReported] = state(false);
+
+	const [onStartDate, setStartDate] = state("");
+	const [onEndDate, setEndDate] = state("");
 
 	let matches = [];
 
@@ -292,6 +296,10 @@ export const matchup = () => {
 			formatDropdown(),
 			goingDropdown(),
 		),
+		e("div.grid",
+			date("Start Date", setStartDate),
+			date("End Date", setEndDate),
+		),
 		numberRange("Min Turns", setMinTurns, 0, 30),
 		toggle("Internal games only", setMustBeReported),
 		e("div",
@@ -340,7 +348,7 @@ export const matchup = () => {
 		)
 	);
 
-	onMany((heroes, opponents, heroCards, opponentCards, format, going, minTurns, mustBeReported) => {
+	onMany((heroes, opponents, heroCards, opponentCards, format, going, minTurns, mustBeReported, startDate, endDate) => {
 		heroCardsIncluded.element.innerHTML = "";
 		heroCardsExcluded.element.innerHTML = "";
 		opponentCardsIncluded.element.innerHTML = "";
@@ -378,7 +386,7 @@ export const matchup = () => {
 		if (going == 2) first = false;
 		if (going == 1) first = true;
 
-		matches = getMatches(heroes, heroIncluded, heroExcluded, opponents, oppIncluded, oppExcluded, format, first, minTurns, mustBeReported);
+		matches = getMatches(heroes, heroIncluded, heroExcluded, opponents, oppIncluded, oppExcluded, format, first, minTurns, mustBeReported, startDate, endDate);
 
 		if (matches.length == 0) return;
 
@@ -391,7 +399,7 @@ export const matchup = () => {
 		));
 
 		winrateDiv.element.append(winrateComponent(matches));
-	}, onHeroes, onOpponents, onHeroCards, onOpponentCards, onFormat, onGoing, onMinTurns, onMustBeReported);
+	}, onHeroes, onOpponents, onHeroCards, onOpponentCards, onFormat, onGoing, onMinTurns, onMustBeReported, onStartDate, onEndDate);
 
 	return html;
 };

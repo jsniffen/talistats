@@ -3,6 +3,7 @@ import {getAggregateWinrates} from "../db.js";
 import {heroLink, round} from "../util.js";
 import {numberRange} from "../components/numberRange.js";
 import {toggle} from "../components/toggle.js";
+import {date} from "../components/date.js";
 
 export const heroesPage = () => {
 	const tbody = ref();
@@ -12,6 +13,8 @@ export const heroesPage = () => {
 	const [onOrder, setOrder] = state(["hero", "asc"]);
 	const [onMinGames, setMinGames] = state(0);
 	const [onMustBeReported, setMustBeReported] = state(false);
+	const [onStartDate, setStartDate] = state("");
+	const [onEndDate, setEndDate] = state("");
 
 	const thOnClick = (e, by) => {
 		e.classList.add("sort");
@@ -44,6 +47,10 @@ export const heroesPage = () => {
 				oninput: e => setQuery(e.target.value),
 			}),
 		),
+		e("div.grid",
+			date("Start Date", setStartDate),
+			date("End Date", setEndDate),
+		),
 		numberRange("Min Games", setMinGames, 0, 100),
 		toggle("Internal games only", setMustBeReported),
 		e("table", 
@@ -57,8 +64,8 @@ export const heroesPage = () => {
 	);
 
 
-	onMany((format, query, order, minGames, mustBeReported) => {
-		const winrates = getAggregateWinrates(format, order[0], order[1], query, minGames, mustBeReported);
+	onMany((format, query, order, minGames, mustBeReported, startDate, endDate) => {
+		const winrates = getAggregateWinrates(format, order[0], order[1], query, minGames, mustBeReported, startDate, endDate);
 
 		tbody.element.innerHTML = "";
 
@@ -69,7 +76,7 @@ export const heroesPage = () => {
 				e("td", round(row.winrate), "%"),
 			);
 		}));
-	}, onFormat, onQuery, onOrder, onMinGames, onMustBeReported);
+	}, onFormat, onQuery, onOrder, onMinGames, onMustBeReported, onStartDate, onEndDate);
 
 	return html;
 };

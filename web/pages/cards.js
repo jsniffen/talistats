@@ -6,6 +6,7 @@ import {pitch} from "../components/pitch.js";
 import {numberRange}  from "../components/numberRange.js";
 import {toggle} from "../components/toggle.js";
 import {scroll} from "../components/scroll.js";
+import {date} from "../components/date.js";
 
 export const cardsPage = () => {
 	const tbody = ref();
@@ -24,6 +25,9 @@ export const cardsPage = () => {
 	const [onOrder, setOrder] = state(["winrate", "desc"]);
 	const [onMustPlay, setMustPlay] = state(false);
 	const [onMustBeReported, setMustBeReported] = state(false);
+
+	const [onStartDate, setStartDate] = state("");
+	const [onEndDate, setEndDate] = state("");
 
 	const [onScroll, setScroll] = scroll;
 
@@ -93,6 +97,10 @@ export const cardsPage = () => {
 			heroesDropdown("Opponents", setOpponents),
 		),
 		e("div.grid",
+			date("Start Date", setStartDate),
+			date("End Date", setEndDate),
+		),
+		e("div.grid",
 			numberRange("Min Turns", setMinTurns, 0, 30),
 			numberRange("Min Games", setMinGames, 0, 100),
 		),
@@ -138,7 +146,7 @@ export const cardsPage = () => {
 		}));
 	});
 
-	onMany((heroes, opponents, going, format, order, mustPlay, query, minTurns, minGames, mustBeReported) => {
+	onMany((heroes, opponents, going, format, order, mustPlay, query, minTurns, minGames, mustBeReported, startDate, endDate) => {
 		tbody.element.innerHTML = "";
 
 		let first = null;
@@ -146,9 +154,9 @@ export const cardsPage = () => {
 		if (going == 2) first = false;
 		if (going == 1) first = true;
 
-		stats = getCardStats(query, heroes, opponents, first, format, order[0], order[1], mustPlay, minTurns, minGames, mustBeReported);
+		stats = getCardStats(query, heroes, opponents, first, format, order[0], order[1], mustPlay, minTurns, minGames, mustBeReported, startDate, endDate);
 		setScroll(1);
-	}, onHeroes, onOpponents, onGoing, onFormat, onOrder, onMustPlay, onQuery, onMinTurns, onMinGames, onMustBeReported);
+	}, onHeroes, onOpponents, onGoing, onFormat, onOrder, onMustPlay, onQuery, onMinTurns, onMinGames, onMustBeReported, onStartDate, onEndDate);
 
 	return html;
 };

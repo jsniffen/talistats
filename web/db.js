@@ -53,7 +53,7 @@ export const getDistinctHeroes = () => {
 	return rows.map(row => row.hero);
 };
 
-export const getAggregateHeroWinrate = (hero, mustBeReported) => {
+export const getAggregateHeroWinrate = (hero, mustBeReported, startDate, endDate) => {
 	const stmt = db.prepare(`
 		select hero, format, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
 		select p1_hero as hero, p2_hero as opp, winner == 1 as win, 1 as hero_player, * from matches
@@ -61,9 +61,11 @@ export const getAggregateHeroWinrate = (hero, mustBeReported) => {
 		select p2_hero as hero, p1_hero as opp, winner == 2 as win, 2 as hero_player, * from matches)
 		where hero == $hero
 			and ($mustBeReported == false or hero_player == reporter or reporter == 3)
+			and ($startDate == '' or date >= $startDate)
+			and ($endDate == '' or date <= $endDate)
 		group by hero, format
 	`);
-	stmt.bind({$hero: hero, $mustBeReported: mustBeReported});
+	stmt.bind({$hero: hero, $mustBeReported: mustBeReported, $startDate: startDate, $endDate: endDate});
 	const result = stmt.get();
 
 	let rows = [];
@@ -73,13 +75,15 @@ export const getAggregateHeroWinrate = (hero, mustBeReported) => {
 	return rows;
 };
 
-export const getAggregateWinrates = (format, orderBy, order, query, minGames, mustBeReported) => {
+export const getAggregateWinrates = (format, orderBy, order, query, minGames, mustBeReported, startDate, endDate) => {
 	const stmt = db.prepare(`
 		select * from (select hero, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
 			select p1_hero as hero, p2_hero as opp, winner == 1 as win, 1 as hero_player, * from matches where format == $format
 			union all
 			select p2_hero as hero, p1_hero as opp, winner == 2 as win, 2 as hero_player, * from matches where format == $format)
 			where ($query is null or hero like concat("%", $query, "%") and ($mustBeReported == false or reporter == hero_player or reporter == 3)
+			and ($startDate == '' or date >= $startDate)
+			and ($endDate == '' or date <= $endDate)
 		) 
 		group by hero
 		order by
@@ -90,7 +94,7 @@ export const getAggregateWinrates = (format, orderBy, order, query, minGames, mu
 		case when $orderBy == 'winrate' and $order == 'asc' then winrate end asc,
 		case when $orderBy == 'winrate' and $order == 'desc' then winrate end desc) where total >= $minGames
 	`);
-	stmt.bind({$format: format, $query: query, $orderBy: orderBy, $order: order, $minGames: minGames, $mustBeReported: mustBeReported});
+	stmt.bind({$format: format, $query: query, $orderBy: orderBy, $order: order, $minGames: minGames, $mustBeReported: mustBeReported, $startDate: startDate, $endDate: endDate});
 	const result = stmt.get();
 
 	let rows = [];
@@ -155,7 +159,7 @@ export const getOpponents = hero => {
 	return rows.map(r => r.opp);
 };
 
-export const getHeroWinrate = (hero, first, format, mustBeReported) => {
+export const getHeroWinrate = (hero, first, format, mustBeReported, startDate, endDate) => {
 	const stmt = db.prepare(`
 		select hero, opp, format, sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate from (
 		select p1_hero as hero, p2_hero as opp, winner == 1 as win, first == 1 as first, 1 as hero_player, * from matches
@@ -165,10 +169,12 @@ export const getHeroWinrate = (hero, first, format, mustBeReported) => {
 			and ($first is null or first == $first)
 			and (format == $format)
 			and ($mustBeReported == false or hero_player == reporter or reporter == 3)
+			and ($startDate == '' or date >= $startDate)
+			and ($endDate == '' or date <= $endDate)
 		group by hero, opp
 		order by opp
 	`);
-	stmt.bind({$hero: hero, $first: first, $format: format, $mustBeReported: mustBeReported});
+	stmt.bind({$hero: hero, $first: first, $format: format, $mustBeReported: mustBeReported, $startDate: startDate, $endDate: endDate});
 	const result = stmt.get();
 
 	let rows = [];
@@ -195,7 +201,7 @@ export const getHeroGamesPlayed = () => {
 	return rows;
 };
 
-export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclude, oppExclude, format, first, minTurns, mustBeReported) => {
+export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclude, oppExclude, format, first, minTurns, mustBeReported, startDate, endDate) => {
 	const heroIncludeList = listToSqlSet(heroInclude);
 	const heroExcludeList = listToSqlSet(heroExclude);
 	const oppIncludeList = listToSqlSet(oppInclude);
@@ -215,6 +221,8 @@ export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclu
 				and ($first is null or first == $first)
 				and format == $format and turns >= $minTurns
 				and ($mustBeReported == false or hero_player == reporter or reporter == 3)
+				and ($startDate == '' or date >= $startDate)
+				and ($endDate == '' or date <= $endDate)
 		)
 		select * from hero_matches m join cards c on m.id == c.match_id
 		group by m.id, first
@@ -225,12 +233,13 @@ export const getMatches = (heroes, heroInclude, heroExclude, opponents, oppInclu
 			and count(distinct case when c.id not in (${oppExcludeList}) and c.player == opp_player then c.id end) = count(distinct case when c.player == opp_player then c.id end)
 		order by date desc
 	`);
-	stmt.bind({$first: first, $format: format, $minTurns: minTurns, $mustBeReported: mustBeReported});
+	stmt.bind({$first: first, $format: format, $minTurns: minTurns, $mustBeReported: mustBeReported, $startDate: startDate, $endDate: endDate});
 
 	let rows = [];
 	while (stmt.step()) {
 		rows.push(stmt.getAsObject());
 	}
+	console.log(rows);
 	return rows;
 };
 
@@ -248,7 +257,7 @@ export const getDecklist = (player, match_id) => {
 	return rows;
 };
 
-export const getCardStats = (query, heroes, opponents, first, format, orderBy, order, mustPlay, minTurns, minGames, mustBeReported) => {
+export const getCardStats = (query, heroes, opponents, first, format, orderBy, order, mustPlay, minTurns, minGames, mustBeReported, startDate, endDate) => {
 	const heroList = listToSqlSet(heroes);
 	const oppList = listToSqlSet(opponents);
 
@@ -264,6 +273,8 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 			and ($mustBeReported == false or reporter == hero_player or reporter == 3)
 			and hero in (${heroList}) and opp in (${oppList})
 			and ($first is null or $first == first)
+			and ($startDate == '' or date >= $startDate)
+			and ($endDate == '' or date <= $endDate)
 		)
 
 		select * from (select sum(win) as wins, count(*) as total, (cast(sum(win) as float)/count(*))*100 as winrate,
@@ -282,6 +293,8 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 				and $format == format
 				and turns >= $minTurns
 				and ($mustBeReported == false or reporter == c.player or reporter == 3)
+				and ($startDate == '' or date >= $startDate)
+				and ($endDate == '' or date <= $endDate)
 		)
 		where name != "" and hero in (${heroList}) and opp in (${oppList}) and ($first is null or $first == first)
 		group by card_id
@@ -303,13 +316,14 @@ export const getCardStats = (query, heroes, opponents, first, format, orderBy, o
 		case when $orderBy == 'inv_winrate' and $order == 'asc' then inv_winrate end asc,
 		case when $orderBy == 'inv_winrate' and $order == 'desc' then inv_winrate end desc) where total >= $minGames
 	`);
-	stmt.bind({$query: query, $heroes: heroes, $opponents: opponents, $first: first, $format: format, $orderBy: orderBy, $order: order, $mustPlay: mustPlay, $minTurns: minTurns, $minGames: minGames, $mustBeReported: mustBeReported});
+	stmt.bind({$query: query, $heroes: heroes, $opponents: opponents, $first: first, $format: format, $orderBy: orderBy, $order: order, $mustPlay: mustPlay, $minTurns: minTurns, $minGames: minGames, $mustBeReported: mustBeReported, $startDate: startDate, $endDate: endDate});
 	const result = stmt.get();
 
 	let rows = [];
 	while (stmt.step()) {
 		rows.push(stmt.getAsObject());
 	}
+	console.log(rows);
 	return rows;
 
 };
