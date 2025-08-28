@@ -41,6 +41,7 @@ const getFormat = async (gameName) => {
 			openformatblitz: "blitz",
 			llcc: "ll",
 			openformatllcc: "ll",
+			compllcc: "ll",
 			draft: "draft",
 			commoner: "commoner",
 			clash: "clash",
